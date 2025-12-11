@@ -24,6 +24,12 @@
 
 		public const string ImagesPath = "./ExternalTools/SotnRandoTools/Images/";
 		public const string CombinedTexture = "./ExternalTools/SotnRandoTools/Images/texture.png";
+		public const string ApertureTexture = "./ExternalTools/SotnRandoTools/Images/apertureTexture.png";
+		public const string SpellboundTexture = "./ExternalTools/SotnRandoTools/Images/spellboundTexture.png";
+		public const string MirrorTexture = "./ExternalTools/SotnRandoTools/Images/MirrorTexture.png";
+		public const string BeyondTexture = "./ExternalTools/SotnRandoTools/Images/beyondTexture.png";
+		public const string OracleTexture = "./ExternalTools/SotnRandoTools/Images/oracleTexture.png";
+		public const string DogTexture = "./ExternalTools/SotnRandoTools/Images/dogTexture.png";
 		public const string TextboxImage = "./ExternalTools/SotnRandoTools/Images/SotnTextBox.png";
 		public const string BizAlucardIcon = "./ExternalTools/SotnRandoTools/BizAlucard.ico";
 		public const string FontAtlas = "./ExternalTools/SotnRandoTools/Images/sotn-font.png";
@@ -42,5 +48,6 @@
 
 		public const string ConfigPath = "./ExternalTools/SotnRandoTools/ToolConfig.ini";
 		public const string SeedInfoPath = "./ExternalTools/SotnRandoTools/TrackerOverlay/SeedInfo.txt";
+		public const string ComplexityInfoPath = "./ExternalTools/SotnRandoTools/TrackerOverlay/ComplexityInfo.txt";
 	}
 }

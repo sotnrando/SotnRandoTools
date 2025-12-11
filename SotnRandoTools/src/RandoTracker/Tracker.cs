@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SotnApi.Constants.Values.Alucard.Enums;
@@ -22,6 +23,7 @@ namespace SotnRandoTools.RandoTracker
 	{
 		private const byte ReplayCooldown = 6;
 		private const string DefaultSeedInfo = "seed(preset)";
+		private const string DefaultComplexity = "Complexity(69)";
 		private const long DraculaEntityAddress = 0x076e98;
 		private const int AutosplitterReconnectCooldown = 120;
 		private readonly IToolConfig toolConfig;
@@ -207,9 +209,11 @@ namespace SotnRandoTools.RandoTracker
 				autosplitter = new();
 			}
 			this.SeedInfo = DefaultSeedInfo;
+			this.Complexity = DefaultComplexity;
 		}
 
 		public string SeedInfo { get; set; }
+		public string Complexity { get; set; }
 		public Locations Locations
 		{
 			get
@@ -816,25 +820,64 @@ namespace SotnRandoTools.RandoTracker
 			return changes > 0;
 		}
 
+		public string CurrentPreset { get; private set; }
+		public Preset? CurrentPresetObj { get; private set; }
+
 		private void GetSeedData()
 		{
 			seedName = sotnApi.GameApi.ReadSeedName();
 			preset = sotnApi.GameApi.ReadPresetName();
-			if (preset == "tournament" || preset == "")
+
+			string normalizedPreset = Regex.Replace(preset, "[^A-Za-z-]", "");
+			string presetFilePath = Path.Combine(Paths.PresetPath, normalizedPreset + ".json");
+
+			Preset? presetObj = null;
+
+			if (File.Exists(presetFilePath))
+			{
+				try
+				{
+					presetObj = JsonConvert.DeserializeObject<Preset>(File.ReadAllText(presetFilePath));
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"Failed to load preset JSON: {ex.Message}");
+				}
+			}
+
+			if (preset == "tournament" || string.IsNullOrEmpty(preset))
 			{
 				preset = "custom";
 			}
-			if (preset == "custom" || !File.Exists(Paths.PresetPath + preset + ".json"))
+
+			if (preset == "custom" || !File.Exists(Path.Combine(Paths.PresetPath, preset + ".json")))
 			{
-				LoadExtension(Paths.ExtensionPath + toolConfig.Tracker.CustomExtension + ".json");
+				LoadExtension(Path.Combine(Paths.ExtensionPath, toolConfig.Tracker.CustomExtension + ".json"));
 			}
 			else
 			{
-				LoadPreset(Paths.PresetPath + preset + ".json");
+				LoadPreset(Path.Combine(Paths.PresetPath, preset + ".json"));
 			}
-			SeedInfo = seedName + "(" + preset + ")";
+
+			if (presetObj != null)
+			{
+				Complexity = $"Extension: {presetObj.Metadata.Extension} Complexity ({presetObj.Complexity.MinComplexity})";
+				SaveComplexityInfo(Complexity);
+			}
+			else
+			{
+				Complexity = "No preset data available";
+				SaveComplexityInfo(Complexity);
+			}
+
+			SeedInfo = $"{seedName} ({preset})";
 			SaveSeedInfo(SeedInfo);
+
 			allBossesGoal = sotnApi.GameApi.AllBossesGoal;
+
+			// Store for external use
+			CurrentPreset = preset;
+			CurrentPresetObj = presetObj;
 		}
 
 		private void ColorAllLocations()
@@ -1201,6 +1244,21 @@ namespace SotnRandoTools.RandoTracker
 			else
 			{
 				using (StreamWriter sw = File.CreateText(Paths.SeedInfoPath))
+				{
+					sw.Write(info);
+				}
+			}
+		}
+
+		private static void SaveComplexityInfo(string info)
+		{
+			if (File.Exists(Paths.ComplexityInfoPath))
+			{
+				File.WriteAllText(Paths.ComplexityInfoPath, info);
+			}
+			else
+			{
+				using (StreamWriter sw = File.CreateText(Paths.ComplexityInfoPath))
 				{
 					sw.Write(info);
 				}
