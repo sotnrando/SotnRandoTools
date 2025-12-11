@@ -30,6 +30,7 @@ namespace SotnRandoTools.RandoTracker
 		private uint[] indices;
 		public string text;
 		private GL Gl;
+		public float ScaledGlyphHeight { get; private set; }
 
 		public unsafe Text(string text, int windowWidth, int windowHeight, int collectedUniform, GL gl)
 		{
@@ -40,6 +41,7 @@ namespace SotnRandoTools.RandoTracker
 			this.windowHeight = windowHeight;
 			float rawScale = (float) (windowWidth - (TextPadding * 2)) / (float) ((text.Length) * (glyphWidth + 1));
 			scale = (float) Math.Floor((double) rawScale);
+			ScaledGlyphHeight = glyphHeight * scale;
 
 			if (rawScale < 1)
 			{
@@ -353,7 +355,7 @@ namespace SotnRandoTools.RandoTracker
 	}
 	internal sealed class TrackerRendererOpenGL : IDisposable
 	{
-		private const int LabelOffset = 37;
+		private int LabelOffset = 64;
 		private const int ItemSize = 14;
 		private const int CellPadding = 2;
 		private const double PixelPerfectSnapMargin = 0.22;
@@ -369,6 +371,7 @@ namespace SotnRandoTools.RandoTracker
 		private int uTextureUniform;
 		private Sprites sprites;
 		private Text seedInfo;
+		private Text complexity;
 		private int columns = 5;
 		private Vector2[] relicSlots = new Vector2[120];
 		private float[] collected = new float[58];
@@ -377,6 +380,7 @@ namespace SotnRandoTools.RandoTracker
 		private IntPtr window;
 		private bool closing = false;
 		private bool alwaysOnTop = false;
+		private string currentPresetId;
 
 		public unsafe TrackerRendererOpenGL(IToolConfig toolConfig, Tracker tracker)
 		{
@@ -602,6 +606,20 @@ namespace SotnRandoTools.RandoTracker
 			}
 		}
 
+		private string GetTexturePathForPreset(string presetId)
+		{
+			switch (presetId.ToLower())
+			{
+				case "magic-mirror":
+					return Paths.MirrorTexture;
+				case "spellbound":
+					return Paths.SpellboundTexture;
+				case "aperture":
+					return Paths.ApertureTexture;
+				default:
+					return Paths.CombinedTexture; // fallback
+			}
+		}
 		private void Update()
 		{
 			if (alwaysOnTop != toolConfig.Tracker.AlwaysOnTop)
@@ -689,12 +707,36 @@ namespace SotnRandoTools.RandoTracker
 				}
 				seedInfo.Dispose();
 				seedInfo = new Text(tracker.SeedInfo, Width, Height, collectedUniform, Gl);
+				complexity.Dispose();
+				complexity = new Text(tracker.Complexity, Width, Height - (int)seedInfo.ScaledGlyphHeight , collectedUniform, Gl);
+				LabelOffset = (int)(seedInfo.ScaledGlyphHeight + complexity.ScaledGlyphHeight * 3);
 				sprites.Dispose();
 				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
 			}
 
 			if (changes || !toolConfig.Tracker.GridLayout)
 			{
+				sprites.Dispose();
+				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
+			}
+			// Check if preset changed → reload texture and rebuild sprites
+			if (tracker.CurrentPreset != currentPresetId)
+			{
+				currentPresetId = tracker.CurrentPreset;
+
+				// Delete old texture
+				if (texture != 0)
+					Gl.DeleteTexture(texture);
+
+				// Load new texture
+				string texturePath = GetTexturePathForPreset(currentPresetId);
+				texture = LoadTexture(texturePath);
+
+				// Rebind to Texture0
+				Gl.ActiveTexture(TextureUnit.Texture0);
+				Gl.BindTexture(GLEnum.Texture2D, texture);
+
+				// Rebuild sprites with new preset
 				sprites.Dispose();
 				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
 			}
@@ -706,6 +748,7 @@ namespace SotnRandoTools.RandoTracker
 			Gl.Uniform1(collectedUniform, collected);
 			sprites.Draw();
 			seedInfo.Draw();
+			complexity.Draw();
 			SDL_GL_SwapWindow(window);
 		}
 
@@ -730,8 +773,11 @@ namespace SotnRandoTools.RandoTracker
 			if (seedInfo != null)
 			{
 				seedInfo.Dispose();
+				complexity.Dispose();
 			}
 			seedInfo = new Text(tracker.SeedInfo, Width, Height, collectedUniform, Gl);
+			complexity = new Text(tracker.Complexity, Width, Height - (int)seedInfo.ScaledGlyphHeight , collectedUniform, Gl);
+			LabelOffset = (int)(seedInfo.ScaledGlyphHeight + complexity.ScaledGlyphHeight * 3);
 			sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
 			CheckForErrors();
 		}
@@ -745,6 +791,7 @@ namespace SotnRandoTools.RandoTracker
 			if (seedInfo != null)
 			{
 				seedInfo.Dispose();
+				complexity.Dispose();
 			}
 		}
 

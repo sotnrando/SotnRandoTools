@@ -10,12 +10,12 @@ namespace SotnRandoTools.RandoTracker.Models
 		[JsonProperty("metaExtension")]
 		public string Extension { get; set; }
 	}
-	internal sealed class LockLocation
+	internal sealed class LockLocation	
 	{
 		[JsonProperty("location")]
 		public string Name { get; set; }
 		[JsonProperty("locks")]
-		public List<string> Locks { get; set; } = new List<string>();
+		public List<string> Locks { get; set ; } = new List<string>();
 	}
 	internal sealed class Alias
 	{
@@ -39,5 +39,15 @@ namespace SotnRandoTools.RandoTracker.Models
 		public List<LockLocation> LockLocations { get; set; } = new List<LockLocation>();
 		[JsonProperty("lockLocationAllowed")]
 		public List<LockLocation> LockLocationsAllowed { get; set; } = new List<LockLocation>();
+		[JsonProperty("complexityGoal")]
+		public ComplexityGoal Complexity { get; set; }
+	}
+
+	internal sealed class ComplexityGoal
+	{
+		[JsonProperty("min")]
+		public int MinComplexity { get; set; }
+		[JsonProperty("goals")]
+		public List<string> Goals { get; set; } = [];
 	}
 }
