@@ -26,6 +26,7 @@
 		public const string CombinedTexture = "./ExternalTools/SotnRandoTools/Images/texture.png";
 		public const string ApertureTexture = "./ExternalTools/SotnRandoTools/Images/apertureTexture.png";
 		public const string SpellboundTexture = "./ExternalTools/SotnRandoTools/Images/spellboundTexture.png";
+		public const string RecyclerTexture = "./ExternalTools/SotnRandoTools/Images/recyclerTexture.png";
 		public const string MirrorTexture = "./ExternalTools/SotnRandoTools/Images/MirrorTexture.png";
 		public const string BeyondTexture = "./ExternalTools/SotnRandoTools/Images/beyondTexture.png";
 		public const string OracleTexture = "./ExternalTools/SotnRandoTools/Images/oracleTexture.png";

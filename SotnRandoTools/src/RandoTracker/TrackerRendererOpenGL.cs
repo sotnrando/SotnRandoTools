@@ -180,7 +180,6 @@ namespace SotnRandoTools.RandoTracker
 			{
 				totalObjects += tracker.timeAttacks.Length;
 			}
-
 			indices = new uint[totalObjects * 6];
 
 			int ind = 0;
@@ -201,6 +200,7 @@ namespace SotnRandoTools.RandoTracker
 				{
 					continue;
 				}
+				//for recycler we dont do this on i == 3,11,15                                      CURRENT TASK 
 				AddQuad(itemCount, i);
 				itemCount++;
 			}
@@ -218,6 +218,12 @@ namespace SotnRandoTools.RandoTracker
 				AddQuad(itemCount, 25 + i);
 				itemCount++;
 			}
+			AddQuad(itemCount, 3);
+			itemCount++;
+			AddQuad(itemCount, 11);
+			itemCount++;
+			AddQuad(itemCount, 15);
+			itemCount++;
 			remainder = itemCount % columns;
 			if (remainder != 0)
 			{
@@ -611,11 +617,24 @@ namespace SotnRandoTools.RandoTracker
 			switch (presetId.ToLower())
 			{
 				case "magic-mirror":
+				case "mirror-breaker":
 					return Paths.MirrorTexture;
 				case "spellbound":
 					return Paths.SpellboundTexture;
 				case "aperture":
+				case "breach":
+				case "max-rando":
+				case "seeker":
 					return Paths.ApertureTexture;
+				case "beyond":
+					return Paths.BeyondTexture;
+				case "oracle":
+					return Paths.OracleTexture;
+				case "dog-life":
+					return Paths.DogTexture;
+				case "recycler":
+				case "recycler-te":
+					return Paths.RecyclerTexture;
 				default:
 					return Paths.CombinedTexture; // fallback
 			}
@@ -729,10 +748,12 @@ namespace SotnRandoTools.RandoTracker
 				// Delete old texture
 				if (texture != 0)
 					Gl.DeleteTexture(texture);
+					Gl.DeleteTexture(font);
 
 				// Load new texture
 				string texturePath = GetTexturePathForPreset(currentPresetId);
 				texture = LoadTexture(texturePath);
+				font = LoadTexture(Paths.FontAtlas);
 
 				// Rebind to Texture0
 				Gl.ActiveTexture(TextureUnit.Texture0);
