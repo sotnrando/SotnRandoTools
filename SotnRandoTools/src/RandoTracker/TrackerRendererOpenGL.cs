@@ -8,6 +8,7 @@ using SDL2;
 using Silk.NET.OpenGL;
 using SotnRandoTools.Configuration.Interfaces;
 using SotnRandoTools.Constants;
+using static BizHawk.Client.Common.ToolDialogSettings;
 using static SDL2.SDL;
 
 namespace SotnRandoTools.RandoTracker
@@ -168,6 +169,10 @@ namespace SotnRandoTools.RandoTracker
 		private int columns;
 		private GL Gl;
 
+		public int[] recyclerSpriteIdOrder = { 0, 18, 1, 2, 4, 23, 5, 6, 7, 19, 8, 9, 10, 12, 13, 14, 16, 17, 20, 21, 22, 24, 98, 25, 26, 27, 28, 29, 3, 11, 15, 98, 30, 31, 32, 33, 34 };
+		public int[] VanillaSpriteIdOrder =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34 };
+		public int EmptyCellCount = 0;
+
 		public unsafe Sprites(float scale, Vector2[] relicSlots, Tracker tracker, int columns, bool grid, bool progression, GL gl)
 		{
 			Gl = gl;
@@ -194,42 +199,58 @@ namespace SotnRandoTools.RandoTracker
 			}
 
 			int itemCount = 0;
+			int remainder = itemCount % columns;
+			EmptyCellCount = 0;
+
+			if (tracker.CurrentPreset != null && tracker.CurrentPreset.ToLower().Contains("recycler"))  // Recycler Mode
+			{
+				for (int i = 0; i < recyclerSpriteIdOrder.Length ; i++)
+				{
+					if ((!grid && !tracker.relics[i].Collected) || (progression && !tracker.relics[i].Progression))
+					{
+						continue;
+					}
+
+					switch(recyclerSpriteIdOrder[i])
+					{
+						case 98:
+							// New Row
+							remainder = itemCount % columns;
+							if (remainder != 0)
+							{
+								itemCount += columns - remainder;
+								EmptyCellCount += columns - remainder;
+							}
+							break;
+						case 99:
+							// Empty
+							itemCount++;
+							EmptyCellCount++;
+							break;
+						default:
+							// Sprite
+							AddQuad(itemCount, recyclerSpriteIdOrder[i]);
+							itemCount++;
+							break;
+					}
+				}
+
+				goto RecyclerExitLabel;
+			}
+
+			// Normal Preset Relic Sprites
 			for (int i = 0; i < 25; i++)
 			{
 				if ((!grid && !tracker.relics[i].Collected) || (progression && !tracker.relics[i].Progression))
 				{
 					continue;
 				}
-				if (tracker.CurrentPreset != null && tracker.CurrentPreset.ToLower().Contains("recycler")) {
-					if ( i == 3 || i == 11 || i == 15 || i == 18 || i == 19 || i == 22 || i == 23 || i == 24) // skip recycler slots
-					{
-							continue;
-					}
-				}
 				AddQuad(itemCount, i);
 				itemCount++;
+			}
 
-			}
-			if (tracker.CurrentPreset != null && tracker.CurrentPreset.ToLower().Contains("recycler"))
-			{
-				AddQuad(itemCount, 18);
-				itemCount++;
-				AddQuad(itemCount, 23);
-				itemCount++;
-				AddQuad(itemCount, 19);
-				itemCount++;
-				AddQuad(itemCount, 22);
-				itemCount++;
-				AddQuad(itemCount, 24);
-				itemCount++;
-				AddQuad(itemCount, 3);
-				itemCount++;
-				AddQuad(itemCount, 11);
-				itemCount++;
-				AddQuad(itemCount, 15);
-				itemCount++;
-			}
-			int remainder = itemCount % columns;
+			// Creates new Row
+			remainder = itemCount % columns;
 			if (remainder != 0)
 			{
 				itemCount += columns - remainder;
@@ -271,6 +292,9 @@ namespace SotnRandoTools.RandoTracker
 				AddQuad(itemCount, 34);
 				itemCount++;
 			}
+
+		RecyclerExitLabel:
+
 			if (tracker.allBossesGoal)
 			{
 				remainder = itemCount % columns;
@@ -380,7 +404,7 @@ namespace SotnRandoTools.RandoTracker
 	}
 	internal sealed class TrackerRendererOpenGL : IDisposable
 	{
-		private int LabelOffset = 64;
+		private int LabelOffset = 40;
 		private const int ItemSize = 14;
 		private const int CellPadding = 2;
 		private const double PixelPerfectSnapMargin = 0.22;
@@ -653,6 +677,7 @@ namespace SotnRandoTools.RandoTracker
 					return Paths.DogTexture;
 				case "recycler":
 				case "recycler-te":
+					OnResize();						// kind of hacky but works.
 					return Paths.RecyclerTexture;
 				default:
 					return Paths.CombinedTexture; // fallback
@@ -749,7 +774,6 @@ namespace SotnRandoTools.RandoTracker
 				seedInfo = new Text(tracker.SeedInfo, Width, Height, collectedUniform, Gl);
 				complexity.Dispose();
 				complexity = new Text(tracker.Complexity, Width, Height - (int)seedInfo.ScaledGlyphHeight , collectedUniform, Gl);
-				LabelOffset = (int)(seedInfo.ScaledGlyphHeight + complexity.ScaledGlyphHeight * 3);
 				sprites.Dispose();
 				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
 			}
@@ -819,7 +843,6 @@ namespace SotnRandoTools.RandoTracker
 			}
 			seedInfo = new Text(tracker.SeedInfo, Width, Height, collectedUniform, Gl);
 			complexity = new Text(tracker.Complexity, Width, Height - (int)seedInfo.ScaledGlyphHeight , collectedUniform, Gl);
-			LabelOffset = (int)(seedInfo.ScaledGlyphHeight + complexity.ScaledGlyphHeight * 3);
 			sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
 			CheckForErrors();
 		}
@@ -866,6 +889,9 @@ namespace SotnRandoTools.RandoTracker
 			}
 
 			int relicCount = 25;
+
+			if (sprites != null)	// Account for Empty Grid Cells when calculating number of rows
+				relicCount += sprites.EmptyCellCount;
 
 			int normalRelicRows = (int) Math.Ceiling((float) (relicCount) / (float) columns);
 			int bossRows = (int) Math.Ceiling((float) (tracker.timeAttacks.Length) / (float) columns);
