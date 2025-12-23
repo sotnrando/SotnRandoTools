@@ -6,6 +6,10 @@ A collection of tools to enhance the [Castlevania:Symphony of the Night Randomiz
 
 This tool and the accompanying library and app are open source. The idea is to implement these features with the perspective of SotN players and provide the source for other developers to learn from and contribute just like the randomizer itself.
 
+## Maintainer Notice
+* This project is now maintained by crazy4blades.
+* Massive thanks to TalicZealot, the original creator of SotnRandoTools, for building the foundation and vision that made this project possible. Their work continues to support the community and this project will honor and extend that legacy.
+
 ## Associated Projects
 * [SotnApi](https://github.com/TalicZealot/SotnApi)
 * [SimpleLatestReleaseUpdater](https://github.com/TalicZealot/SimpleLatestReleaseUpdater)
@@ -30,7 +34,7 @@ This tool and the accompanying library and app are open source. The idea is to i
 
 ## Installation
 This tool requires [the latest BizHawk version](https://github.com/TASEmulators/BizHawk/releases/latest).
-Download the full version from the [latest release](https://github.com/TalicZealot/SotnRandoTools/releases/latest) that looks like this `SotnRandoTools-x.x.x.zip`
+Download the full version from the [latest release](https://github.com/crazy4blades/SotnRandoTools/releases/latest) that looks like this `SotnRandoTools-x.x.x.zip`
 Right click on it and select `Extract all...` then navigate to your BizHawkfolder and press `Extract`.
 File structure should look like this:
 ```
@@ -54,7 +58,7 @@ Every tool's window possition and the Tracker's size are all saved and will open
 If the Extarnal Tool says that the game is not supported for the tool and BizHawk is displaying a question mark in the lower left corner your rom is either not recognized or you have to make sure the cue file is pointing to the correct files. I recommend creating a separate folder for Randomizer where you copy both tracks and the cue and replace track1 every time you randomize.
 
 ## Updating
-On lunching the tool it will check for a new release and inform the user. If there is a newer release the update button apepars. Clicking it shuts down BizHawk and updates the tool. If it displays "Installation failed" please run the updater manually by going to ```BizHawk\ExternalTools\SotnRandoTools\Updater\SimpleLatestReleaseUpdater.exe``` or get the [latest release](https://github.com/TalicZealot/SotnRandoTools/releases/latest) from GitHub and update manually. If you get an error notifying you that your system lacks the necessary .NET version to run the updater click [the link](https://dotnet.microsoft.com/download/dotnet/5.0/runtime?utm_source=getdotnetcore&utm_medium=referral) and download the x64 and x86 redistributable packages for desktop apps.
+On lunching the tool it will check for a new release and inform the user. If there is a newer release the update button apepars. Clicking it shuts down BizHawk and updates the tool. If it displays "Installation failed" please run the updater manually by going to ```BizHawk\ExternalTools\SotnRandoTools\Updater\SimpleLatestReleaseUpdater.exe``` or get the [latest release](https://github.com/crazy4blades/SotnRandoTools/releases/latest) from GitHub and update manually. If you get an error notifying you that your system lacks the necessary .NET version to run the updater click [the link](https://dotnet.microsoft.com/download/dotnet/5.0/runtime?utm_source=getdotnetcore&utm_medium=referral) and download the x64 and x86 redistributable packages for desktop apps.
 
 ## Autotracker
 The new tracker has been re-written from the ground up for better performance and usability. Can be manually rescaled. Saves size and location. Locations are drawn on the game map.
@@ -79,3 +83,4 @@ Bindings over at: [https://taliczealot.github.io/coop/](https://taliczealot.gith
 * SotN Rando Community
 * SotN Decomp Researchers
 * Everybody who donated during the development of the project
+* And a very special thanks to TalicZealot, the original creator of SotnRandoTools.
