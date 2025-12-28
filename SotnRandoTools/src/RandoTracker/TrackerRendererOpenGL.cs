@@ -170,10 +170,11 @@ namespace SotnRandoTools.RandoTracker
 		private int columns;
 		private GL Gl;
 
-		public int[] recyclerSpriteIdOrder = { 0, 18, 1, 2, 4, 23, 5, 6, 7, 19, 8, 9, 10, 12, 13, 14, 16, 17, 20, 21, 22, 24, 98, 25, 26, 27, 28, 29, 3, 11, 15, 98, 30, 31, 32, 33, 34 };
-		public int[] bountySpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 99, 99, 98, 22, 21, 20, 19, 18, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34 };
-		public int[] VanillaSpriteIdOrder =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34 };
-		public int[] oracleSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 28, 29, 99, 99, 99, 98, 32, 33, 34, 99, 99 };
+		public int[] VanillaSpriteIdOrder =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34, 35};
+		public int[] recyclerSpriteIdOrder = { 0, 18, 1, 2, 4, 23, 5, 6, 7, 19, 8, 9, 10, 12, 13, 14, 16, 17, 20, 21, 22, 24, 98, 25, 26, 27, 28, 29, 3, 11, 15, 98, 30, 31, 32, 33, 35, 34};
+		public int[] bountySpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 98, 22, 21, 20, 19, 18, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 35, 34 };
+		public int[] oracleSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 28, 29, 98, 32, 33, 35, 34 };
+		public int[] anypercentSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 30, 31, 32, 35, 34 };
 		public int EmptyCellCount = 0;
 
 		public unsafe Sprites(float scale, Vector2[] relicSlots, Tracker tracker, int columns, bool grid, bool progression, GL gl)
@@ -183,11 +184,27 @@ namespace SotnRandoTools.RandoTracker
 			this.relicSlots = relicSlots;
 			this.columns = columns;
 
-			int totalObjects = tracker.relics.Length + 5 ;
+			int totalObjects = 0;
+
+			// Relics
+			totalObjects += tracker.relics.Length;
+
+			// Progression items
+			totalObjects += tracker.progressionItems.Length;
+
+			// Thrust swords (only one icon is drawn if ANY sword is collected)
+			bool anySword = tracker.thrustSwords.Any(s => s.Collected);
+			if (grid || anySword)
+			{
+				totalObjects += 1; // sprite ID 35
+			}
+
+			// Time attacks
 			if (tracker.allBossesGoal)
 			{
 				totalObjects += tracker.timeAttacks.Length;
 			}
+
 			indices = new uint[totalObjects * 6];
 
 			int ind = 0;
@@ -224,6 +241,10 @@ namespace SotnRandoTools.RandoTracker
 						 .Any(p => preset.Contains(p)))
 				{
 					spriteOrder = bountySpriteIdOrder;
+				}
+				else if (preset.Contains("any-percent"))
+				{
+					spriteOrder = anypercentSpriteIdOrder;
 				}
 			}
 
@@ -295,7 +316,7 @@ namespace SotnRandoTools.RandoTracker
 			{
 				itemCount += columns - remainder;
 			}
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 5; i++)
 			{
 				if (!grid && !tracker.progressionItems[i].Collected)
 				{
@@ -315,7 +336,7 @@ namespace SotnRandoTools.RandoTracker
 			}
 			if (grid || swordCollected)
 			{
-				AddQuad(itemCount, 34);
+				AddQuad(itemCount, 35);
 				itemCount++;
 			}
 
@@ -764,28 +785,28 @@ namespace SotnRandoTools.RandoTracker
 					break;
 				}
 			}
-			if (collected[34] == 0.0f && swordCollected)
+			if (collected[35] == 0.0f && swordCollected)
 			{
-				collected[34] = 0.1f;
+				collected[35] = 0.1f;
 			}
-			if (collected[34] != 0.0f && !swordCollected)
+			if (collected[35] != 0.0f && !swordCollected)
 			{
-				collected[34] = 0.0f;
+				collected[35] = 0.0f;
 			}
 
 			if (tracker.allBossesGoal)
 			{
 				for (int i = 0; i < tracker.timeAttacks.Length; i++)
 				{
-					if (collected[35 + i] == 0.0f && tracker.timeAttacks[i])
+					if (collected[36 + i] == 0.0f && tracker.timeAttacks[i])
 					{
 						changes = true;
-						collected[35 + i] = 0.1f;
+						collected[36 + i] = 0.1f;
 					}
-					if (collected[35 + i] != 0.0f && !tracker.timeAttacks[i])
+					if (collected[36 + i] != 0.0f && !tracker.timeAttacks[i])
 					{
 						changes = true;
-						collected[35 + i] = 0.0f;
+						collected[36 + i] = 0.0f;
 					}
 				}
 			}
@@ -917,9 +938,9 @@ namespace SotnRandoTools.RandoTracker
 		public void CalculateGrid(int width, int height)
 		{
 			columns = (int) (8 * (((float) width / (float) height)));
-			if (columns < 5)
+			if (columns < 6)
 			{
-				columns = 5;
+				columns = 6;
 			}
 
 			int relicCount = 25;

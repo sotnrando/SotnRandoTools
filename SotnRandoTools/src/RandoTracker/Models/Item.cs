@@ -1,4 +1,6 @@
-﻿namespace SotnRandoTools.RandoTracker.Models
+﻿using System.Numerics;
+
+namespace SotnRandoTools.RandoTracker.Models
 {
 	internal struct Item
 	{
@@ -10,5 +12,7 @@
 		public bool Status;
 		public bool Collected;
 		public bool Equipped;
+
+		public Vector2 Position { get; internal set; }
 	}
 }

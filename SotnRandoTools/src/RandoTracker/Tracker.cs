@@ -38,7 +38,8 @@ namespace SotnRandoTools.RandoTracker
 			new Item {Value = 72, Index = (byte)SotnApi.Constants.Values.Alucard.Equipment.Items.IndexOf("Gold Ring")},
 			new Item {Value = 73, Index = (byte)SotnApi.Constants.Values.Alucard.Equipment.Items.IndexOf("Silver Ring")},
 			new Item {Value = 14, Index = (byte)SotnApi.Constants.Values.Alucard.Equipment.Items.IndexOf("Spike Breaker")},
-			new Item {Value = 34, Index = (byte)SotnApi.Constants.Values.Alucard.Equipment.Items.IndexOf("Holy glasses")}
+			new Item {Value = 34, Index = (byte)SotnApi.Constants.Values.Alucard.Equipment.Items.IndexOf("Holy glasses")},
+			new Item {Value = 150, Index = (byte)SotnApi.Constants.Values.Alucard.Equipment.Items.IndexOf("Library card")}
 		};
 		public readonly Item[] thrustSwords = new Item[]
 		{
@@ -90,7 +91,8 @@ namespace SotnRandoTools.RandoTracker
 			{ "Silver ring",    0b0000000000000000000000000000000010000000000000000000000000000000},
 			{ "Spike Breaker",  0b0000000000000000000000000000000100000000000000000000000000000000},
 			{ "Holy glasses",   0b0000000000000000000000000000001000000000000000000000000000000000},
-			{ "Thrust sword",   0b0000000000000000000000000000010000000000000000000000000000000000}
+			{ "Thrust sword",   0b0000000000000000000000000000010000000000000000000000000000000000},
+			{ "Library card",   0b0000000000000000000000000000100000000000000000000000000000000000}
 		};
 		private readonly Dictionary<string, byte> abilityToIndex = new Dictionary<string, byte>
 		{
@@ -128,7 +130,8 @@ namespace SotnRandoTools.RandoTracker
 			{ "Silver ring",    31},
 			{ "Spike Breaker",  32},
 			{ "Holy glasses",   33},
-			{ "Thrust sword",   34}
+			{ "Thrust sword",   34},
+			{ "Library card",   35}
 		};
 		private readonly ulong[] abilityFlags = new ulong[]
 		{
@@ -166,7 +169,8 @@ namespace SotnRandoTools.RandoTracker
 			0b0000000000000000000000000000000010000000000000000000000000000000,
 			0b0000000000000000000000000000000100000000000000000000000000000000,
 			0b0000000000000000000000000000001000000000000000000000000000000000,
-			0b0000000000000000000000000000010000000000000000000000000000000000
+			0b0000000000000000000000000000010000000000000000000000000000000000,
+			0b0000000000000000000000000000100000000000000000000000000000000000
 		};
 		private readonly Dictionary<string, ushort> locationToIndex = new Dictionary<string, ushort>();
 
@@ -703,6 +707,9 @@ namespace SotnRandoTools.RandoTracker
 						break;
 					case 3:
 						progressionItems[i].Equipped = (sotnApi.AlucardApi.Helm == progressionItems[i].Value);
+						break;
+					case 4:
+						progressionItems[i].Equipped = (sotnApi.AlucardApi.RightHand == progressionItems[i].Value) || (sotnApi.AlucardApi.LeftHand == progressionItems[i].Value);
 						break;
 					default:
 						progressionItems[i].Equipped = false;
