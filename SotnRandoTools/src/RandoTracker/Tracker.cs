@@ -661,7 +661,7 @@ namespace SotnRandoTools.RandoTracker
 					{
 						changes++;
 						relics[i].Collected = false;
-						relicsFlags &= (byte) ~(1 << i);
+						relicsFlags &= (int) ~(1 << i);
 					}
 				}
 			}
