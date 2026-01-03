@@ -134,7 +134,7 @@ namespace SotnRandoTools.RandoTracker
 			{ "Spike Breaker",  32},
 			{ "Holy glasses",   33},
 			{ "Thrust sword",   34},
-			{ "Library card",   57}
+			{ "Library card",   59}
 		};
 		private readonly ulong[] abilityFlags = new ulong[]
 		{

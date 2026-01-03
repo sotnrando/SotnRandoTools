@@ -170,9 +170,9 @@ namespace SotnRandoTools.RandoTracker
 		private int columns;
 		private GL Gl;
 
-		public int[] VanillaSpriteIdOrder =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34, 58};
+		public int[] VanillaSpriteIdOrder =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34, 59};
 		public int[] recyclerSpriteIdOrder = { 0, 18, 1, 2, 4, 23, 5, 6, 7, 19, 8, 9, 10, 12, 13, 14, 16, 17, 20, 21, 22, 24, 98, 25, 26, 27, 28, 29, 3, 11, 15, 98, 30, 31, 32, 33, 35, 34};
-		public int[] bountySpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 98, 22, 21, 20, 19, 18, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33,57, 34 };
+		public int[] bountySpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 98, 22, 21, 20, 19, 18, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33,59, 34 };
 		public int[] oracleSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 28, 29, 98, 32, 33, 35, 34 };
 		public int[] anypercentSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 30, 31, 32, 35, 34 };
 		public int EmptyCellCount = 0;
@@ -354,7 +354,7 @@ namespace SotnRandoTools.RandoTracker
 
 			if (importantCollected || grid)
 			{
-				int importantIndex = 57 + tracker.timeAttacks.Length;
+				int importantIndex = 58 + tracker.timeAttacks.Length;
 
 				// New row before placing the icon
 				remainder = itemCount % columns;
@@ -497,7 +497,7 @@ namespace SotnRandoTools.RandoTracker
 		private Text complexity;
 		private int columns = 5;
 		private Vector2[] relicSlots = new Vector2[120];
-		private float[] collected = new float[58];
+		private float[] collected = new float[70];
 		private GL Gl;
 		private IntPtr Glc;
 		private IntPtr window;
@@ -850,14 +850,14 @@ namespace SotnRandoTools.RandoTracker
 				}
 			}
 
-			if (collected[57] == 0.0f && importantCollected)
+			if (collected[59] == 0.0f && importantCollected)
 			{
-				collected[57] = 0.1f;
+				collected[59] = 0.1f;
 			}
 
-			if (collected[57] != 0.0f && !importantCollected)
+			if (collected[59] != 0.0f && !importantCollected)
 			{
-				collected[57] = 0.0f;
+				collected[59] = 0.0f;
 			}
 			for (int i = 0; i < collected.Length; i++)
 			{
