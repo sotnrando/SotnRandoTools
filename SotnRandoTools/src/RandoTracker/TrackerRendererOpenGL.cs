@@ -1030,16 +1030,17 @@ namespace SotnRandoTools.RandoTracker
 		{
 			// --- 1. Determine column count ---
 			columns = (int) (8f * (width / (float) height));
-			if (columns < 6)
-				columns = 6;
+			if (columns < 5)
+				columns = 5;
 
-			int relicCount = 26;
+			int relicCount = 25;
 
 			if (sprites != null)
 				relicCount += sprites.EmptyCellCount;
 
 			// Add boss rows only if enabled
 			int bossCount = tracker.allBossesGoal ? tracker.timeAttacks.Length : 0;
+			int itemCount = 1;
 
 			// Reserve 1 row for progression/thrust sword row
 			// Reserve 1 row for important item row
@@ -1048,8 +1049,9 @@ namespace SotnRandoTools.RandoTracker
 			// Compute row counts
 			int relicRows = (int) Math.Ceiling(relicCount / (float) columns);
 			int bossRows = (int) Math.Ceiling(bossCount / (float) columns);
+			int itemRows = (int) Math.Ceiling(itemCount / (float) columns);
 
-			int totalRows = relicRows + bossRows + reservedRows;
+			int totalRows = relicRows + bossRows + reservedRows + itemCount;
 
 			// --- 4. Compute scale ---
 			int cellSize = ItemSize + CellPadding;
