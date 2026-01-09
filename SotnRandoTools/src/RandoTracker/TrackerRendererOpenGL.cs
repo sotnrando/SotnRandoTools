@@ -170,11 +170,11 @@ namespace SotnRandoTools.RandoTracker
 		private int columns;
 		private GL Gl;
 		 
-		public int[] VanillaSpriteIdOrder =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34, 59};
-		public int[] recyclerSpriteIdOrder = { 0, 18, 1, 2, 4, 23, 5, 6, 7, 19, 8, 9, 10, 12, 13, 14, 16, 17, 20, 21, 22, 24, 98, 25, 26, 27, 28, 29, 3, 11, 15, 98, 30, 31, 32, 33, 35, 34};
+		public int[] VanillaSpriteIdOrder =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34, 59 };
+		public int[] recyclerSpriteIdOrder = { 0, 18, 1, 2, 4, 23, 5, 6, 7, 19, 8, 9, 10, 12, 13, 14, 16, 17, 20, 21, 22, 24, 98, 25, 26, 27, 28, 29, 3, 11, 15, 98, 30, 31, 32, 33, 34, 59 };
 		public int[] bountySpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 98, 22, 21, 20, 19, 18, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34, 59 };
-		public int[] oracleSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 59, 98, 28, 29, 98, 32, 33, 34 };
-		public int[] anypercentSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 30, 31, 32, 35, 34 };
+		public int[] oracleSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 28, 29, 32, 33, 34, 59 };
+		public int[] anypercentSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 30, 31, 32, 34, 59 };
 		public int EmptyCellCount = 0;
 
 		public unsafe Sprites(float scale, Vector2[] relicSlots, Tracker tracker, int columns, bool grid, bool progression, GL gl)
@@ -191,7 +191,7 @@ namespace SotnRandoTools.RandoTracker
 			int remainder = 0;
 
 			// Determine which sprite order to use
-			int[] spriteOrder = null;
+			int[]? spriteOrder = null;
 
 			if (tracker.CurrentPreset != null)
 			{
@@ -265,6 +265,15 @@ namespace SotnRandoTools.RandoTracker
 				if (remainder != 0)
 				{
 					itemCount += columns - remainder;
+				}
+				bool importantActive = false;
+				for (int i = 0; i < tracker.importantItems.Length; i++)
+				{
+					if (tracker.importantItems[i].Collected || tracker.importantItems[i].Equipped)
+					{
+						importantActive = true;
+						break;
+					}
 				}
 			}
 			else
@@ -370,21 +379,7 @@ namespace SotnRandoTools.RandoTracker
 					itemCount++;
 				}
 			}
-				bool importantActive = false;
-				for (int i = 0; i < tracker.importantItems.Length; i++)
-				{
-					if (tracker.importantItems[i].Collected || tracker.importantItems[i].Equipped)
-					{
-						importantActive = true;
-						break;
-					}
-				}
-
-				if (grid || importantActive)
-				{
-					AddQuad(itemCount, 59);
-					itemCount++;
-				}
+				
 
 			// Build index buffer based on actual quad count
 			// Each quad = 4 vertices, each vertex = 5 floats
@@ -547,7 +542,7 @@ namespace SotnRandoTools.RandoTracker
 				throw new Exception($"Failed to create SDL window: {SDL.SDL_GetError()}");
 			}
 			SDL_SetWindowMinimumSize(window, 200, 220);
-			SDL_SetWindowMaximumSize(window, 1600, 1000);
+			SDL_SetWindowMaximumSize(window, 1920, 1080);
 			Glc = SDL_GL_CreateContext(window);
 			if (Glc == IntPtr.Zero)
 			{
@@ -940,14 +935,14 @@ namespace SotnRandoTools.RandoTracker
 
 				if (texture != 0)
 					Gl.DeleteTexture(texture);
-				Gl.DeleteTexture(font);
+					Gl.DeleteTexture(font);
 
-				string texturePath = GetTexturePathForPreset(currentPresetId);
-				texture = LoadTexture(texturePath);
-				font = LoadTexture(Paths.FontAtlas);
+					string texturePath = GetTexturePathForPreset(currentPresetId);
+					texture = LoadTexture(texturePath);
+					font = LoadTexture(Paths.FontAtlas);
 
-				Gl.ActiveTexture(TextureUnit.Texture0);
-				Gl.BindTexture(GLEnum.Texture2D, texture);
+					Gl.ActiveTexture(TextureUnit.Texture0);
+					Gl.BindTexture(GLEnum.Texture2D, texture);
 
 				sprites.Dispose();
 				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
@@ -1043,7 +1038,7 @@ namespace SotnRandoTools.RandoTracker
 			int itemCount = 1;
 
 			// Reserve 1 row for progression/thrust sword row
-			// Reserve 1 row for important item row
+			// Reserve 1 row for Vlad Relics
 			int reservedRows = 2;
 
 			// Compute row counts

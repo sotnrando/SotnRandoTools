@@ -906,7 +906,6 @@ namespace SotnRandoTools.RandoTracker
 			{
 				string complexityText;
 
-				if (presetObj.Complexity == null || presetObj.Complexity.MinComplexity == null)
 				{
 					// Complexity missing → mark as "set"
 					complexityText = "set";
