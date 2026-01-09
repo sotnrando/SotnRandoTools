@@ -1,6 +1,6 @@
 # Symphony of the Night Randomizer Tools
 
-[![(latest) release | GitHub](https://img.shields.io/github/release/crazy4blades/SotnRandoTools.svg?logo=github&logoColor=333333&style=popout)](https://github.com/crazy4blades/SotnRandoTools/releases/latest)
+[![(latest) release | GitHub]((https://img.shields.io/github/v/release/sotnrando/SotnRandoTools.svg?logo=github&logoColor=333333&style=popout))](https://github.com/sotnrando/SotnRandoTools/releases/latest)
 
 A collection of tools to enhance the [Castlevania:Symphony of the Night Randomizer](https://sotn.io) experience.
 
