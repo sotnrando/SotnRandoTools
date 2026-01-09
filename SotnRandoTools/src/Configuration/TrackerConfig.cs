@@ -84,6 +84,7 @@ namespace SotnRandoTools.Configuration
 		public bool ProgressionRelicsOnly { get; set; }
 		public bool GridLayout { get; set; }
 		public bool AlwaysOnTop { get; set; }
+		public bool LibraryCard { get; set; }
 		public bool Locations { get; set; }
 		public bool SaveReplays { get; set; }
 		public bool EnableAutosplitter { get; set; }
@@ -103,6 +104,7 @@ namespace SotnRandoTools.Configuration
 			ProgressionRelicsOnly = false;
 			GridLayout = true;
 			AlwaysOnTop = false;
+			LibraryCard = true;
 			Locations = true;
 			SaveReplays = true;
 			EnableAutosplitter = true;
