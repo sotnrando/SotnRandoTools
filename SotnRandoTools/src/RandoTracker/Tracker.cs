@@ -839,10 +839,7 @@ namespace SotnRandoTools.RandoTracker
 
 		private bool UpdateTimeAttacks()
 		{
-			if (!allBossesGoal)
-			{
-				return false;
-			}
+			
 
 			int changes = 0;
 			for (int i = 0; i < timeAttacks.Length; i++)

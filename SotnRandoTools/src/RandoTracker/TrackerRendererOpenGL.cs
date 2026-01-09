@@ -339,21 +339,6 @@ namespace SotnRandoTools.RandoTracker
 					itemCount++;
 				}
 
-				bool importantActive = false;
-				for (int i = 0; i < tracker.importantItems.Length; i++)
-				{
-					if (tracker.importantItems[i].Collected || tracker.importantItems[i].Equipped)
-					{
-						importantActive = true;
-						break;
-					}
-				}
-
-				if (grid || importantActive)
-				{
-					AddQuad(itemCount, 59);
-					itemCount++;
-				}
 
 				// Align to row end after normal layout
 				remainder = itemCount % columns;
@@ -385,6 +370,21 @@ namespace SotnRandoTools.RandoTracker
 					itemCount++;
 				}
 			}
+				bool importantActive = false;
+				for (int i = 0; i < tracker.importantItems.Length; i++)
+				{
+					if (tracker.importantItems[i].Collected || tracker.importantItems[i].Equipped)
+					{
+						importantActive = true;
+						break;
+					}
+				}
+
+				if (grid || importantActive)
+				{
+					AddQuad(itemCount, 59);
+					itemCount++;
+				}
 
 			// Build index buffer based on actual quad count
 			// Each quad = 4 vertices, each vertex = 5 floats
