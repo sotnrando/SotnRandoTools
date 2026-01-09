@@ -4,14 +4,14 @@
 	{
 		public const string ItemPickupSound = "./ExternalTools/SotnRandoTools/Sounds/Item.wav";
 
-		public const string SourceLink = "https://github.com/crazy4blades/SotnRandoTools/";
-		public const string ReadmeLink = "https://github.com/crazy4blades/SotnRandoTools/blob/main/README.md";
+		public const string SourceLink = "https://github.com/sotnrando/SotnRandoTools/";
+		public const string ReadmeLink = "https://github.com/sotnrando/SotnRandoTools/blob/main/README.md";
 		public const string ApiLink = "https://github.com/TalicZealot/SotnApi";
 		public const string UpdaterLink = "https://github.com/TalicZealot/SimpleLatestReleaseUpdater";
 		public const string RandoSourceLink = "https://github.com/sotnrando/sotnrando";
 
-		public const string LatestReleaseApi = "https://api.github.com/repos/crazy4blades/sotnrandotools/releases";
-		public const string LatestReleaseUrl = "https://github.com/crazy4blades/SotnRandoTools/releases/latest";
+		public const string LatestReleaseApi = "https://api.github.com/repos/sotnrando/sotnrandotools/releases";
+		public const string LatestReleaseUrl = "https://github.com/sotnrando/SotnRandoTools/releases/latest";
 		public const string UpdaterPath = @"\ExternalTools\SotnRandoTools\Updater\SimpleLatestReleaseUpdater.exe";
 		public const string UpdaterFolderPath = @"\ExternalTools\SotnRandoTools\Updater\";
 
