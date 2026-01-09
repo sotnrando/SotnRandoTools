@@ -53,6 +53,7 @@ namespace SotnRandoTools
 			muteCheckBox.Checked = toolConfig.Tracker.MuteMusic;
 			stereoCheckBox.Checked = toolConfig.Tracker.Stereo;
 			alwaysOpTopCheckbox.Checked = toolConfig.Tracker.AlwaysOnTop;
+			LibraryCardCheckbox.Checked = toolConfig.Tracker.LibraryCard;
 
 			List<string> extensions = Directory.GetFiles(Paths.ExtensionPath).Select(file => Path.GetFileNameWithoutExtension(file)).ToList();
 			for (int i = 0; i < extensions.Count; i++)
@@ -143,6 +144,11 @@ namespace SotnRandoTools
 		private void alwaysOpTopCheckbox_CheckedChanged(object sender, EventArgs e)
 		{
 			toolConfig.Tracker.AlwaysOnTop = alwaysOpTopCheckbox.Checked;
+		}
+
+		private void LibraryCardCheckbox_CheckedChanged(object sender, EventArgs e)
+		{
+			toolConfig.Tracker.LibraryCard = LibraryCardCheckbox.Checked;
 		}
 
 		private void loadLayoutButton_Click(object sender, EventArgs e)
