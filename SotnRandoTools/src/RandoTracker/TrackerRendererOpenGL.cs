@@ -7,6 +7,7 @@ using System.Numerics;
 using BizHawk.Common;
 using SDL2;
 using Silk.NET.OpenGL;
+using SotnRandoTools.Configuration;
 using SotnRandoTools.Configuration.Interfaces;
 using SotnRandoTools.Constants;
 using static BizHawk.Client.Common.ToolDialogSettings;
@@ -33,6 +34,7 @@ namespace SotnRandoTools.RandoTracker
 		public string text;
 		private GL Gl;
 		public float ScaledGlyphHeight { get; private set; }
+		public bool IncludeLibraryCard;
 
 		public unsafe Text(string text, int windowWidth, int windowHeight, int collectedUniform, GL gl)
 		{
@@ -177,7 +179,7 @@ namespace SotnRandoTools.RandoTracker
 		public int[] anypercentSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 30, 31, 32, 34, 59 };
 		public int EmptyCellCount = 0;
 
-		public unsafe Sprites(float scale, Vector2[] relicSlots, Tracker tracker, int columns, bool grid, bool progression, GL gl)
+		public unsafe Sprites(float scale, Vector2[] relicSlots, Tracker tracker, int columns, bool grid, bool progression, GL gl, bool IncludeLibraryCard)
 		{
 			Gl = gl;
 			this.scale = scale;
@@ -254,8 +256,16 @@ namespace SotnRandoTools.RandoTracker
 							break;
 
 						default: // Sprite
-							AddQuad(itemCount, spriteOrder[i]);
-							itemCount++;
+							if (IncludeLibraryCard == false && spriteOrder[i] == 59)
+							{
+								itemCount++;
+								EmptyCellCount++;
+							}
+							else
+							{
+								AddQuad(itemCount, spriteOrder[i]);
+								itemCount++;
+							}
 							break;
 					}
 				}
@@ -512,6 +522,7 @@ namespace SotnRandoTools.RandoTracker
 		private IntPtr window;
 		private bool closing = false;
 		private bool alwaysOnTop = false;
+		private bool LibraryCard = false;
 		private string currentPresetId;
 
 		public unsafe TrackerRendererOpenGL(IToolConfig toolConfig, Tracker tracker)
@@ -535,6 +546,16 @@ namespace SotnRandoTools.RandoTracker
 				alwaysOnTop = true;
 				flags |= SDL_WindowFlags.SDL_WINDOW_ALWAYS_ON_TOP;
 			}
+
+			if (toolConfig.Tracker.LibraryCard)
+			{
+				LibraryCard = true;
+			}
+			else
+			{
+				LibraryCard = false;
+			}
+
 
 			window = SDL_CreateWindow("Autotracker", X, Y, Width, Height, flags);
 			if (window == IntPtr.Zero)
@@ -801,6 +822,11 @@ namespace SotnRandoTools.RandoTracker
 				SDL_SetWindowAlwaysOnTop(window, alwaysOnTop ? SDL_bool.SDL_TRUE : SDL_bool.SDL_FALSE);
 			}
 
+			if (LibraryCard != toolConfig.Tracker.LibraryCard)
+			{
+				LibraryCard = toolConfig.Tracker.LibraryCard;
+			}
+
 			bool changes = false;
 
 			// RELICS
@@ -918,14 +944,14 @@ namespace SotnRandoTools.RandoTracker
 				complexity = new Text(tracker.Complexity, Width, Height - (int)seedInfo.ScaledGlyphHeight, collectedUniform, Gl);
 
 				sprites.Dispose();
-				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
+				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl, LibraryCard);
 			}
 
 			// SPRITE REBUILD ON CHANGE
 			if (changes || !toolConfig.Tracker.GridLayout)
 			{
 				sprites.Dispose();
-				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
+				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl, LibraryCard);
 			}
 
 			// PRESET CHANGE → RELOAD TEXTURES
@@ -945,7 +971,7 @@ namespace SotnRandoTools.RandoTracker
 					Gl.BindTexture(GLEnum.Texture2D, texture);
 
 				sprites.Dispose();
-				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
+				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl, LibraryCard);
 			}
 		}
 
@@ -984,7 +1010,7 @@ namespace SotnRandoTools.RandoTracker
 			}
 			seedInfo = new Text(tracker.SeedInfo, Width, Height, collectedUniform, Gl);
 			complexity = new Text(tracker.Complexity, Width, Height - (int)seedInfo.ScaledGlyphHeight , collectedUniform, Gl);
-			sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl);
+			sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl, LibraryCard);
 			CheckForErrors();
 		}
 
@@ -1092,4 +1118,5 @@ namespace SotnRandoTools.RandoTracker
 			closing = true;
 		}
 	}
+
 }
