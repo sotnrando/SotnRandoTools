@@ -787,6 +787,7 @@ namespace SotnRandoTools.RandoTracker
 				case "mobility":
 					return Paths.MirrorTexture;
 				case "spellbound":
+				case "anguish":
 					return Paths.SpellboundTexture;
 				case "aperture":
 				case "breach":

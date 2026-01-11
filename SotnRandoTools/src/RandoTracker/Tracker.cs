@@ -689,8 +689,26 @@ namespace SotnRandoTools.RandoTracker
 			// PASS 1 — Inventory detection
 			for (int i = 0; i < progressionItems.Length; i++)
 			{
-				progressionItems[i].Collected =
-					sotnApi.AlucardApi.HasItemInInventory(progressionItems[i].Index);
+				if (sotnApi.AlucardApi.HasItemInInventory(progressionItems[i].Index))
+				{
+					if (progressionItems[i].CollectedAt == 0)
+					{
+						progressionItems[i].X = currentMapX;
+						if (secondCastle)
+						{
+							progressionItems[i].X += 100;
+						}
+
+						progressionItems[i].Y = currentMapY;
+						progressionItems[i].CollectedAt = (ushort) replayLenght;
+					}
+
+					progressionItems[i].Collected = true;
+				}
+				else
+				{
+					progressionItems[i].Collected = false;
+				}
 			}
 
 			// PASS 2 — Equipped detection ONLY
@@ -732,7 +750,7 @@ namespace SotnRandoTools.RandoTracker
 				else if (progressionItems[i].Status && !active)
 				{
 					progressionItems[i].Status = false;
-					itemsFlags &= (byte)~(1 << i);
+					itemsFlags &= (byte) ~(1 << i);
 					changes++;
 				}
 			}
