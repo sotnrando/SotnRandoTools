@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SotnApi.Constants.Addresses;
 using SotnApi.Constants.Values.Alucard.Enums;
 using SotnApi.Constants.Values.Game;
 using SotnApi.Constants.Values.Game.Enums;
@@ -973,6 +974,11 @@ namespace SotnRandoTools.RandoTracker
 		//TODO: portal spell discovery
 		private void ColorMapRoom(int locationIndex, byte color, bool secondCastle)
 		{
+			if (sotnApi.GameApi.Transition != 0x14)
+			{
+				return;
+			}
+
 			uint x = (uint) locations.states[locationIndex].x;
 			uint y = (uint) locations.states[locationIndex].y;
 			if (x <= 0 || y <= 0)

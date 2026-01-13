@@ -780,40 +780,56 @@ namespace SotnRandoTools.RandoTracker
 
 		private string GetTexturePathForPreset(string presetId)
 		{
-			switch (presetId.ToLower())
+			string id = presetId.ToLower();
+
+			// Mirror group
+			if (id.Contains("magic-mirror") ||
+				id.Contains("mirror-breaker") ||
+				id.Contains("mobility"))
+				return Paths.MirrorTexture;
+
+			// Spellbound group
+			if (id.Contains("spellbound") ||
+				id.Contains("anguish") ||
+				id.Contains("skill-expression"))
+				return Paths.SpellboundTexture;
+
+			// Aperture group
+			if (id.Contains("aperture") ||
+				id.Contains("breach") ||
+				id.Contains("max-rando") ||
+				id.Contains("seeker"))
+				return Paths.ApertureTexture;
+
+			// Beyond
+			if (id.Contains("beyond"))
+				return Paths.BeyondTexture;
+
+			// Oracle
+			if (id.Contains("oracle"))
+				return Paths.OracleTexture;
+
+			// Dog Life
+			if (id.Contains("dog-life"))
+				return Paths.DogTexture;
+
+			// Recycler (any variant)
+			if (id.Contains("recycler"))
 			{
-				case "magic-mirror":
-				case "mirror-breaker":
-				case "mobility":
-					return Paths.MirrorTexture;
-				case "spellbound":
-				case "anguish":
-					return Paths.SpellboundTexture;
-				case "aperture":
-				case "breach":
-				case "max-rando":
-				case "seeker":
-					return Paths.ApertureTexture;
-				case "beyond":
-					return Paths.BeyondTexture;
-				case "oracle":
-					return Paths.OracleTexture;
-				case "dog-life":
-					return Paths.DogTexture;
-				case "recycler":
-				case "recycler-te":
-					OnResize();						// kind of hacky but works.
-					return Paths.RecyclerTexture;
-				case "bounty-hunter":
-				case "hitman":
-				case "target-confirmed":
-				case "rampage":
-				case "rampage-25te":
-				case "chaos-lite":
-					return Paths.BountyTexture;
-				default:
-					return Paths.CombinedTexture; // fallback
+				OnResize();
+				return Paths.RecyclerTexture;
 			}
+
+			// Bounty group (any variant)
+			if (id.Contains("bounty-hunter") ||
+				id.Contains("hitman") ||
+				id.Contains("target-confirmed") ||
+				id.Contains("rampage") ||
+				id.Contains("chaos-lite"))
+				return Paths.BountyTexture;
+
+			// Fallback
+			return Paths.CombinedTexture;
 		}
 		private void Update()
 		{
