@@ -355,6 +355,19 @@ namespace SotnRandoTools.RandoTracker
 			}
 		}
 
+		private string GetExtensionFileFromRam(string extensionName)
+		{
+			return extensionName switch
+			{
+				"Classic" => "classic.json",
+				"Guarded" => "guarded.json",
+				"GuardedPlus" => "guardedplus.json",
+				"Extended" => "extended.json",
+				"Equipment" => "equipment.json",
+				"Scenic" => "scenic.json",
+				_ => "classic.json" //fallback
+			};
+		}
 		private unsafe bool LoadExtension(string extensionFilePath)
 		{
 			if (!File.Exists(extensionFilePath))
@@ -883,19 +896,52 @@ namespace SotnRandoTools.RandoTracker
 			return changes > 0;
 		}
 
+		private (string extensionName, string complexityText, bool valid) DecodePresetByte(byte value)
+		{
+			int extDetect = (value & 0xF0) >> 4;
+			int compDetect = (value & 0x0F);
+
+			string extension = extDetect switch
+			{
+				0x0 => "Classic",
+				0x1 => "Guarded",
+				0x2 => "GuardedPlus",
+				0x3 => "Extended",
+				0x4 => "Equipment",
+				0x5 => "Scenic",
+				_ => $"Unknown({extDetect:X})"
+			};
+
+			// Decimal conversion of hex (1–15)
+			string complexity = compDetect.ToString();
+
+			// NEW: valid only if BOTH nibbles are non-zero and extension is known
+			bool valid =
+				extDetect >= 0x0 && extDetect <= 0x5 &&
+				compDetect != 0;
+
+			return (extension, complexity, valid);
+		}
 		public string CurrentPreset { get; private set; }
 		public Preset? CurrentPresetObj { get; private set; }
 
 		private void GetSeedData()
 		{
+			// Read seed + preset name from API
 			seedName = sotnApi.GameApi.ReadSeedName();
 			preset = sotnApi.GameApi.ReadPresetName();
 
+			// Read the raw preset byte from RAM
+			byte presetByte = sotnApi.GameApi.PresetByte;
+			var (ramExtension, ramComplexity, ramValid) = DecodePresetByte(presetByte);
+
+			// Normalize preset name for file lookup
 			string normalizedPreset = Regex.Replace(preset, "[^A-Za-z0-9-]", "");
 			string presetFilePath = Path.Combine(Paths.PresetPath, normalizedPreset + ".json");
 
 			Preset? presetObj = null;
 
+			// Load preset JSON (needed for metadata + logic)
 			if (File.Exists(presetFilePath))
 			{
 				try
@@ -908,47 +954,46 @@ namespace SotnRandoTools.RandoTracker
 				}
 			}
 
+			// Handle tournament/custom logic
 			if (preset == "tournament" || string.IsNullOrEmpty(preset))
 			{
 				preset = "custom";
 			}
 
-			if (preset == "custom" || !File.Exists(Path.Combine(Paths.PresetPath, preset + ".json")))
-			{
-				LoadExtension(Path.Combine(Paths.ExtensionPath, toolConfig.Tracker.CustomExtension + ".json"));
-			}
-			else
-			{
-				LoadPreset(Path.Combine(Paths.PresetPath, preset + ".json"));
-			}
+			// Determine final extension + complexity
+			string finalExtension = ramExtension;
+			string finalComplexity = ramComplexity;
 
-			if (presetObj != null)
+			if (!ramValid && presetObj != null)
 			{
-				string complexityText;
-
-				if (presetObj.Complexity == null)
-				{
-					// Complexity missing → mark as "set"
-					complexityText = "set";
-				}
-				else
-				{
-					// Normal case
-					complexityText = presetObj.Complexity.MinComplexity.ToString();
-				}
-
-				Complexity = $"[{presetObj.Metadata.Extension}] - Complexity ({complexityText})";
-				SaveComplexityInfo(Complexity);
-			}
-			else
-			{
-				Complexity = "No preset data available";
-				SaveComplexityInfo(Complexity);
+				finalExtension = presetObj.Metadata.Extension;
+				finalComplexity = presetObj.Complexity?.MinComplexity.ToString() ?? "set";
 			}
 
+			// 1. Load extension FIRST (locations only)
+			string extensionFile = GetExtensionFileFromRam(finalExtension);
+			string extensionPath = Path.Combine(Paths.ExtensionPath, extensionFile);
+			LoadExtension(extensionPath);
+
+			// 2. Load preset SECOND (logic only)
+			if (File.Exists(presetFilePath))
+			{
+				LoadPreset(presetFilePath);
+			}
+
+			// 3. Now that logic is loaded, compute reachability
+			CheckReachability();
+			ColorAllLocations();
+
+			// Display complexity + extension
+			Complexity = $"[{finalExtension}] - Complexity ({finalComplexity})";
+			SaveComplexityInfo(Complexity);
+
+			// Display seed info
 			SeedInfo = $"{seedName} ({preset})";
 			SaveSeedInfo(SeedInfo);
 
+			// Other game state
 			allBossesGoal = sotnApi.GameApi.AllBossesGoal;
 
 			// Store for external use
