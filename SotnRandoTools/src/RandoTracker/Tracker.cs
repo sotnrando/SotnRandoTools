@@ -986,11 +986,11 @@ namespace SotnRandoTools.RandoTracker
 			ColorAllLocations();
 
 			// Display complexity + extension
-			Complexity = $"[{finalExtension}] - Complexity ({finalComplexity})";
+			Complexity = $"";
 			SaveComplexityInfo(Complexity);
 
 			// Display seed info
-			SeedInfo = $"{seedName} ({preset})";
+			SeedInfo = $"{seedName}\n({preset})\n[{finalExtension}] - Complexity ({finalComplexity})";
 			SaveSeedInfo(SeedInfo);
 
 			// Other game state

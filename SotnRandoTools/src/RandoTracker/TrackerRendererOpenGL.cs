@@ -72,8 +72,17 @@ namespace SotnRandoTools.RandoTracker
 
 			float xpos = TextPadding;
 			float ypos = windowHeight - (TextPadding + (glyphHeight * scale));
+
 			for (int i = 0; i < text.Length; i++)
 			{
+				// NEW: handle newline
+				if (text[i] == '\n')
+				{
+					xpos = TextPadding;
+					ypos -= (glyphHeight * scale) + 2; // small spacing
+					continue;
+				}
+
 				float textureCoordsX = ((byte) text[i] - 33) * textureItemWidth;
 				if (text[i] < '!' || text[i] > 'z')
 				{
@@ -177,6 +186,7 @@ namespace SotnRandoTools.RandoTracker
 		public int[] bountySpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 98, 22, 21, 20, 19, 18, 98, 25, 26, 27, 28, 29, 98, 30, 31, 32, 33, 34, 59 };
 		public int[] oracleSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 28, 29, 32, 33, 34, 59 };
 		public int[] anypercentSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 98, 30, 31, 32, 34, 59 };
+		public int[] tournamentSpriteIdOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 98, 25, 26, 27, 28, 29, 34, 59 };
 		public int EmptyCellCount = 0;
 
 		public unsafe Sprites(float scale, Vector2[] relicSlots, Tracker tracker, int columns, bool grid, bool progression, GL gl, bool IncludeLibraryCard)
@@ -215,6 +225,10 @@ namespace SotnRandoTools.RandoTracker
 				else if (preset.Contains("any-percent"))
 				{
 					spriteOrder = anypercentSpriteIdOrder;
+				}
+				else if (preset.Contains("-spr26te"))
+				{
+					spriteOrder = tournamentSpriteIdOrder;
 				}
 				else
 				{
@@ -986,6 +1000,7 @@ namespace SotnRandoTools.RandoTracker
 
 					Gl.ActiveTexture(TextureUnit.Texture0);
 					Gl.BindTexture(GLEnum.Texture2D, texture);
+					OnResize();
 
 				sprites.Dispose();
 				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl, LibraryCard);
@@ -1069,7 +1084,16 @@ namespace SotnRandoTools.RandoTracker
 			// --- 1. Determine column count ---
 			columns = (int) (8f * (width / (float) height));
 			if (columns < 5)
+			{
 				columns = 5;
+			}
+
+			// 2: Force 7 columns for -spr26te presets
+			if (tracker.CurrentPreset != null &&
+				tracker.CurrentPreset.ToLower().Contains("-spr26te"))
+			{
+				columns = 7;
+			}
 
 			int relicCount = 25;
 
