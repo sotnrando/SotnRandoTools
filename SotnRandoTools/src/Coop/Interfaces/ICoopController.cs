@@ -1,4 +1,4 @@
-﻿using SotnRandoTools.Coop.Models;
+using SotnRandoTools.Coop.Models;
 
 namespace SotnRandoTools.Coop.Interfaces
 {
@@ -7,6 +7,7 @@ namespace SotnRandoTools.Coop.Interfaces
 		CoopState CoopState { get; }
 		bool SynchRequested { get; set; }
 		void Connect(string hostIp, int port);
+		void ConnectOnline(string websocketUrl, string roomId);
 		void Disconnect();
 		void StartServer(int port);
 		void StopServer();

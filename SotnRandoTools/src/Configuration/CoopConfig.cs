@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 
 namespace SotnRandoTools.Configuration
 {
@@ -9,11 +9,13 @@ namespace SotnRandoTools.Configuration
 			DefaultPort = 46318;
 			Volume = 5;
 			SendButton = 0;
+			WebSocketUrl = "wss://api.sotn.io/coop";
 		}
 
 		public Point Location { get; set; }
 		public int SendButton { get; set; }
 		public int DefaultPort { get; set; }
 		public int Volume { get; set; }
+		public string WebSocketUrl { get; set; }
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace SotnRandoTools.Coop.Enums
+namespace SotnRandoTools.Coop.Enums
 {
 	public enum NetworkStatus
 	{
@@ -12,6 +12,7 @@
 		Disconnected,
 		Reconnecting,
 		TimedOut,
-		ManuallyDisconnected
+		ManuallyDisconnected,
+		JoiningRoom
 	}
 }

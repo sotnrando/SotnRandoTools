@@ -1,4 +1,4 @@
-﻿
+
 namespace SotnRandoTools
 {
     partial class CoopForm
@@ -30,6 +30,7 @@ namespace SotnRandoTools
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            this.localSectionLabel = new System.Windows.Forms.Label();
             this.hostButton = new System.Windows.Forms.Button();
             this.connectButton = new System.Windows.Forms.Button();
             this.targetIp = new System.Windows.Forms.TextBox();
@@ -39,14 +40,32 @@ namespace SotnRandoTools
             this.serverGroup = new System.Windows.Forms.GroupBox();
             this.clientGroup = new System.Windows.Forms.GroupBox();
             this.addressTooltip = new System.Windows.Forms.ToolTip(this.components);
+            this.sectionDivider = new System.Windows.Forms.Label();
+            this.onlineGroup = new System.Windows.Forms.GroupBox();
+            this.onlineConnectButton = new System.Windows.Forms.Button();
+            this.roomIdTextBox = new System.Windows.Forms.TextBox();
+            this.roomIdLabel = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.ping = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.portNumeric)).BeginInit();
             this.serverGroup.SuspendLayout();
             this.clientGroup.SuspendLayout();
+            this.onlineGroup.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // localSectionLabel
+            // 
+            this.localSectionLabel.AutoSize = true;
+            this.localSectionLabel.BackColor = System.Drawing.Color.Transparent;
+            this.localSectionLabel.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.localSectionLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(160)))), ((int)(((byte)(180)))));
+            this.localSectionLabel.Location = new System.Drawing.Point(4, 4);
+            this.localSectionLabel.Name = "localSectionLabel";
+            this.localSectionLabel.Size = new System.Drawing.Size(105, 14);
+            this.localSectionLabel.TabIndex = 20;
+            this.localSectionLabel.Text = "Local (Direct IP)";
             // 
             // hostButton
             // 
@@ -147,7 +166,7 @@ namespace SotnRandoTools
             this.serverGroup.Controls.Add(this.portLabel);
             this.serverGroup.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.serverGroup.ForeColor = System.Drawing.Color.White;
-            this.serverGroup.Location = new System.Drawing.Point(4, 12);
+            this.serverGroup.Location = new System.Drawing.Point(4, 22);
             this.serverGroup.Name = "serverGroup";
             this.serverGroup.Size = new System.Drawing.Size(275, 53);
             this.serverGroup.TabIndex = 7;
@@ -161,7 +180,7 @@ namespace SotnRandoTools
             this.clientGroup.Controls.Add(this.IPlabel);
             this.clientGroup.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.clientGroup.ForeColor = System.Drawing.Color.White;
-            this.clientGroup.Location = new System.Drawing.Point(4, 71);
+            this.clientGroup.Location = new System.Drawing.Point(4, 81);
             this.clientGroup.Name = "clientGroup";
             this.clientGroup.Size = new System.Drawing.Size(275, 73);
             this.clientGroup.TabIndex = 8;
@@ -172,13 +191,72 @@ namespace SotnRandoTools
             // 
             this.addressTooltip.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Error;
             // 
+            // sectionDivider
+            // 
+            this.sectionDivider.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.sectionDivider.Location = new System.Drawing.Point(4, 163);
+            this.sectionDivider.Name = "sectionDivider";
+            this.sectionDivider.Size = new System.Drawing.Size(275, 1);
+            this.sectionDivider.TabIndex = 21;
+            // 
+            // onlineGroup
+            // 
+            this.onlineGroup.Controls.Add(this.onlineConnectButton);
+            this.onlineGroup.Controls.Add(this.roomIdTextBox);
+            this.onlineGroup.Controls.Add(this.roomIdLabel);
+            this.onlineGroup.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.onlineGroup.ForeColor = System.Drawing.Color.White;
+            this.onlineGroup.Location = new System.Drawing.Point(4, 170);
+            this.onlineGroup.Name = "onlineGroup";
+            this.onlineGroup.Size = new System.Drawing.Size(275, 73);
+            this.onlineGroup.TabIndex = 9;
+            this.onlineGroup.TabStop = false;
+            this.onlineGroup.Text = "Online";
+            // 
+            // onlineConnectButton
+            // 
+            this.onlineConnectButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(57)))), ((int)(((byte)(21)))), ((int)(((byte)(57)))));
+            this.onlineConnectButton.FlatAppearance.BorderSize = 2;
+            this.onlineConnectButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(67)))), ((int)(((byte)(35)))), ((int)(((byte)(67)))));
+            this.onlineConnectButton.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(20)))), ((int)(((byte)(48)))));
+            this.onlineConnectButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.onlineConnectButton.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.onlineConnectButton.Location = new System.Drawing.Point(8, 14);
+            this.onlineConnectButton.Name = "onlineConnectButton";
+            this.onlineConnectButton.Size = new System.Drawing.Size(261, 24);
+            this.onlineConnectButton.TabIndex = 1;
+            this.onlineConnectButton.Text = "Connect";
+            this.onlineConnectButton.UseVisualStyleBackColor = true;
+            this.onlineConnectButton.Click += new System.EventHandler(this.onlineConnectButton_Click);
+            // 
+            // roomIdTextBox
+            // 
+            this.roomIdTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.roomIdTextBox.Location = new System.Drawing.Point(64, 44);
+            this.roomIdTextBox.Name = "roomIdTextBox";
+            this.roomIdTextBox.Size = new System.Drawing.Size(204, 21);
+            this.roomIdTextBox.TabIndex = 2;
+            // 
+            // roomIdLabel
+            // 
+            this.roomIdLabel.AutoSize = true;
+            this.roomIdLabel.BackColor = System.Drawing.Color.Transparent;
+            this.roomIdLabel.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.roomIdLabel.ForeColor = System.Drawing.Color.White;
+            this.roomIdLabel.Location = new System.Drawing.Point(5, 47);
+            this.roomIdLabel.Margin = new System.Windows.Forms.Padding(0);
+            this.roomIdLabel.Name = "roomIdLabel";
+            this.roomIdLabel.Size = new System.Drawing.Size(53, 13);
+            this.roomIdLabel.TabIndex = 4;
+            this.roomIdLabel.Text = "Room ID:";
+            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.ping);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.groupBox1.ForeColor = System.Drawing.Color.White;
-            this.groupBox1.Location = new System.Drawing.Point(4, 150);
+            this.groupBox1.Location = new System.Drawing.Point(4, 249);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(275, 47);
             this.groupBox1.TabIndex = 8;
@@ -216,10 +294,13 @@ namespace SotnRandoTools
             this.AutoValidate = System.Windows.Forms.AutoValidate.EnableAllowFocusChange;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(0)))), ((int)(((byte)(17)))));
             this.CausesValidation = false;
-            this.ClientSize = new System.Drawing.Size(284, 203);
+            this.ClientSize = new System.Drawing.Size(284, 302);
             this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.onlineGroup);
+            this.Controls.Add(this.sectionDivider);
             this.Controls.Add(this.clientGroup);
             this.Controls.Add(this.serverGroup);
+            this.Controls.Add(this.localSectionLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(800, 800);
@@ -235,6 +316,8 @@ namespace SotnRandoTools
             this.serverGroup.PerformLayout();
             this.clientGroup.ResumeLayout(false);
             this.clientGroup.PerformLayout();
+            this.onlineGroup.ResumeLayout(false);
+            this.onlineGroup.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -243,6 +326,8 @@ namespace SotnRandoTools
 
 		#endregion
 
+		private System.Windows.Forms.Label localSectionLabel;
+		private System.Windows.Forms.Label sectionDivider;
 		private System.Windows.Forms.Button hostButton;
 		private System.Windows.Forms.Button connectButton;
 		private System.Windows.Forms.TextBox targetIp;
@@ -252,6 +337,10 @@ namespace SotnRandoTools
 		private System.Windows.Forms.GroupBox serverGroup;
 		private System.Windows.Forms.GroupBox clientGroup;
 		private System.Windows.Forms.ToolTip addressTooltip;
+		private System.Windows.Forms.GroupBox onlineGroup;
+		private System.Windows.Forms.Button onlineConnectButton;
+		private System.Windows.Forms.TextBox roomIdTextBox;
+		private System.Windows.Forms.Label roomIdLabel;
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.Label ping;
 		private System.Windows.Forms.Label label1;
