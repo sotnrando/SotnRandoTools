@@ -3,6 +3,7 @@ using SotnApi.Interfaces;
 using SotnRandoTools.Configuration.Interfaces;
 using SotnRandoTools.Coop.Enums;
 using SotnRandoTools.Coop.Interfaces;
+using SotnRandoTools.Services;
 
 namespace SotnRandoTools.Coop
 {
@@ -10,6 +11,7 @@ namespace SotnRandoTools.Coop
 	{
 		private readonly IToolConfig toolConfig;
 		private readonly ISotnApi sotnApi;
+		private readonly INotificationService notificationService;
 		private readonly ICoopController coopController;
 		private bool sendPressedFrame1 = false;
 		private bool sendPressedFrame2 = false;
@@ -22,10 +24,11 @@ namespace SotnRandoTools.Coop
 		byte[] data9 = new byte[9];
 		private ushort[] sendButton = new ushort[4] { SotnApi.Constants.Values.Game.Controller.Select, SotnApi.Constants.Values.Game.Controller.Triangle, SotnApi.Constants.Values.Game.Controller.L3, SotnApi.Constants.Values.Game.Controller.R3 };
 
-		public CoopSender(IToolConfig toolConfig, ISotnApi sotnApi, ICoopController coopController)
+		public CoopSender(IToolConfig toolConfig, ISotnApi sotnApi, INotificationService notificationService, ICoopController coopController)
 		{
 			this.toolConfig = toolConfig ?? throw new ArgumentNullException(nameof(toolConfig));
 			this.sotnApi = sotnApi ?? throw new ArgumentNullException(nameof(sotnApi)); ;
+			this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
 			this.coopController = coopController ?? throw new ArgumentNullException(nameof(coopController));
 		}
 
@@ -179,7 +182,7 @@ namespace SotnRandoTools.Coop
 			{
 				return;
 			}
-
+			notificationService.AddMessage("Requested Synch");
 			SendSynchRequest();
 		}
 

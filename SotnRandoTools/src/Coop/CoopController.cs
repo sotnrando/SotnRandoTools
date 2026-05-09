@@ -25,7 +25,7 @@ namespace SotnRandoTools.Coop
 			this.coopViewModel = coopViewModel ?? throw new ArgumentNullException(nameof(coopViewModel));
 			this.sotnApi = sotnApi ?? throw new ArgumentNullException(nameof(sotnApi));
 			coopState = new CoopState(sotnApi, locationTracker);
-			coopSender = new CoopSender(toolConfig, sotnApi, this);
+			coopSender = new CoopSender(toolConfig, sotnApi, notificationService, this);
 			coopReceiver = new CoopReceiver(toolConfig, sotnApi, notificationService, this);
 		}
 

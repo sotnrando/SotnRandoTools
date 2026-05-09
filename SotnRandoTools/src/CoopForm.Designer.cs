@@ -48,6 +48,9 @@ namespace SotnRandoTools
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.ping = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.lblRoomExplanation = new System.Windows.Forms.Label();
+            this.helpTooltip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.portNumeric)).BeginInit();
             this.serverGroup.SuspendLayout();
             this.clientGroup.SuspendLayout();
@@ -194,24 +197,25 @@ namespace SotnRandoTools
             // sectionDivider
             // 
             this.sectionDivider.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.sectionDivider.Location = new System.Drawing.Point(4, 163);
+            this.sectionDivider.Location = new System.Drawing.Point(4, 213);
             this.sectionDivider.Name = "sectionDivider";
             this.sectionDivider.Size = new System.Drawing.Size(275, 1);
             this.sectionDivider.TabIndex = 21;
             // 
             // onlineGroup
             // 
+            this.onlineGroup.Controls.Add(this.lblRoomExplanation);
             this.onlineGroup.Controls.Add(this.onlineConnectButton);
             this.onlineGroup.Controls.Add(this.roomIdTextBox);
             this.onlineGroup.Controls.Add(this.roomIdLabel);
             this.onlineGroup.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.onlineGroup.ForeColor = System.Drawing.Color.White;
-            this.onlineGroup.Location = new System.Drawing.Point(4, 170);
+            this.onlineGroup.Location = new System.Drawing.Point(4, 242);
             this.onlineGroup.Name = "onlineGroup";
             this.onlineGroup.Size = new System.Drawing.Size(275, 73);
             this.onlineGroup.TabIndex = 9;
             this.onlineGroup.TabStop = false;
-            this.onlineGroup.Text = "Online";
+            this.onlineGroup.Text = "Join Room";
             // 
             // onlineConnectButton
             // 
@@ -221,7 +225,7 @@ namespace SotnRandoTools
             this.onlineConnectButton.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(20)))), ((int)(((byte)(48)))));
             this.onlineConnectButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.onlineConnectButton.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.onlineConnectButton.Location = new System.Drawing.Point(8, 14);
+            this.onlineConnectButton.Location = new System.Drawing.Point(8, 42);
             this.onlineConnectButton.Name = "onlineConnectButton";
             this.onlineConnectButton.Size = new System.Drawing.Size(261, 24);
             this.onlineConnectButton.TabIndex = 1;
@@ -232,9 +236,9 @@ namespace SotnRandoTools
             // roomIdTextBox
             // 
             this.roomIdTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.roomIdTextBox.Location = new System.Drawing.Point(64, 44);
+            this.roomIdTextBox.Location = new System.Drawing.Point(76, 16);
             this.roomIdTextBox.Name = "roomIdTextBox";
-            this.roomIdTextBox.Size = new System.Drawing.Size(204, 21);
+            this.roomIdTextBox.Size = new System.Drawing.Size(192, 21);
             this.roomIdTextBox.TabIndex = 2;
             // 
             // roomIdLabel
@@ -243,10 +247,10 @@ namespace SotnRandoTools
             this.roomIdLabel.BackColor = System.Drawing.Color.Transparent;
             this.roomIdLabel.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.roomIdLabel.ForeColor = System.Drawing.Color.White;
-            this.roomIdLabel.Location = new System.Drawing.Point(5, 47);
+            this.roomIdLabel.Location = new System.Drawing.Point(5, 19);
             this.roomIdLabel.Margin = new System.Windows.Forms.Padding(0);
             this.roomIdLabel.Name = "roomIdLabel";
-            this.roomIdLabel.Size = new System.Drawing.Size(53, 13);
+            this.roomIdLabel.Size = new System.Drawing.Size(52, 13);
             this.roomIdLabel.TabIndex = 4;
             this.roomIdLabel.Text = "Room ID:";
             // 
@@ -256,7 +260,7 @@ namespace SotnRandoTools
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.groupBox1.ForeColor = System.Drawing.Color.White;
-            this.groupBox1.Location = new System.Drawing.Point(4, 249);
+            this.groupBox1.Location = new System.Drawing.Point(4, 157);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(275, 47);
             this.groupBox1.TabIndex = 8;
@@ -287,6 +291,36 @@ namespace SotnRandoTools
             this.label1.TabIndex = 6;
             this.label1.Text = "Ping:";
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.BackColor = System.Drawing.Color.Transparent;
+            this.label2.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(160)))), ((int)(((byte)(180)))));
+            this.label2.Location = new System.Drawing.Point(4, 223);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(45, 14);
+            this.label2.TabIndex = 22;
+            this.label2.Text = "Online";
+            // 
+            // lblRoomExplanation
+            // 
+            this.lblRoomExplanation.AutoSize = true;
+            this.lblRoomExplanation.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.lblRoomExplanation.Location = new System.Drawing.Point(60, 19);
+            this.lblRoomExplanation.Name = "lblRoomExplanation";
+            this.lblRoomExplanation.Size = new System.Drawing.Size(13, 13);
+            this.lblRoomExplanation.TabIndex = 5;
+            this.lblRoomExplanation.Text = "?";
+            this.helpTooltip.SetToolTip(this.lblRoomExplanation, "Enter a room name! It can be anything as long as\r\nthe other player chooses the sa" +
+        "me room name.");
+            // 
+            // helpTooltip
+            // 
+            this.helpTooltip.AutoPopDelay = 20000;
+            this.helpTooltip.InitialDelay = 200;
+            this.helpTooltip.ReshowDelay = 100;
+            // 
             // CoopForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -294,7 +328,8 @@ namespace SotnRandoTools
             this.AutoValidate = System.Windows.Forms.AutoValidate.EnableAllowFocusChange;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(0)))), ((int)(((byte)(17)))));
             this.CausesValidation = false;
-            this.ClientSize = new System.Drawing.Size(284, 302);
+            this.ClientSize = new System.Drawing.Size(284, 324);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.onlineGroup);
             this.Controls.Add(this.sectionDivider);
@@ -321,6 +356,7 @@ namespace SotnRandoTools
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -344,6 +380,9 @@ namespace SotnRandoTools
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.Label ping;
 		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label lblRoomExplanation;
+		private System.Windows.Forms.ToolTip helpTooltip;
 	}
 }
 
