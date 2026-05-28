@@ -53,7 +53,7 @@ namespace SotnRandoTools.Coop
 							notificationService.PlayAlert();
 						}
 						break;
-					case MessageType.Location:
+					case MessageType.Location:						
 						sotnApi.GameApi.SetRoomToVisited(SotnApi.Constants.Addresses.Game.MapStart + index);
 						coopController.CoopState.locations[index2].status = true;
 						sotnApi.AlucardApi.Rooms++;

@@ -39,6 +39,7 @@ namespace SotnRandoTools
             this.radioGrid = new System.Windows.Forms.RadioButton();
             this.radioCollected = new System.Windows.Forms.RadioButton();
             this.optionsGroup = new System.Windows.Forms.GroupBox();
+            this.LibraryCardCheckbox = new System.Windows.Forms.CheckBox();
             this.alwaysOpTopCheckbox = new System.Windows.Forms.CheckBox();
             this.stereoCheckBox = new System.Windows.Forms.CheckBox();
             this.muteCheckBox = new System.Windows.Forms.CheckBox();
@@ -56,7 +57,7 @@ namespace SotnRandoTools
             this.saveLayoutButton = new System.Windows.Forms.Button();
             this.openLayoutDialog = new System.Windows.Forms.OpenFileDialog();
             this.saveLayoutDialog = new System.Windows.Forms.SaveFileDialog();
-			this.LibraryCardCheckbox = new System.Windows.Forms.CheckBox();
+            this.timerCheckBox = new System.Windows.Forms.CheckBox();
             this.relicDisplayGroup.SuspendLayout();
             this.layoutGroup.SuspendLayout();
             this.optionsGroup.SuspendLayout();
@@ -137,13 +138,14 @@ namespace SotnRandoTools
             // 
             // layoutGroup
             // 
+            this.layoutGroup.Controls.Add(this.timerCheckBox);
             this.layoutGroup.Controls.Add(this.radioGrid);
             this.layoutGroup.Controls.Add(this.radioCollected);
             this.layoutGroup.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.layoutGroup.ForeColor = System.Drawing.Color.White;
             this.layoutGroup.Location = new System.Drawing.Point(6, 137);
             this.layoutGroup.Name = "layoutGroup";
-            this.layoutGroup.Size = new System.Drawing.Size(182, 81);
+            this.layoutGroup.Size = new System.Drawing.Size(182, 100);
             this.layoutGroup.TabIndex = 4;
             this.layoutGroup.TabStop = false;
             this.layoutGroup.Text = "Layout";
@@ -173,7 +175,7 @@ namespace SotnRandoTools
             // 
             // optionsGroup
             // 
-			this.optionsGroup.Controls.Add(this.LibraryCardCheckbox);
+            this.optionsGroup.Controls.Add(this.LibraryCardCheckbox);
             this.optionsGroup.Controls.Add(this.alwaysOpTopCheckbox);
             this.optionsGroup.Controls.Add(this.stereoCheckBox);
             this.optionsGroup.Controls.Add(this.muteCheckBox);
@@ -188,6 +190,17 @@ namespace SotnRandoTools
             this.optionsGroup.TabIndex = 6;
             this.optionsGroup.TabStop = false;
             this.optionsGroup.Text = "Options";
+            // 
+            // LibraryCardCheckbox
+            // 
+            this.LibraryCardCheckbox.AutoSize = true;
+            this.LibraryCardCheckbox.Location = new System.Drawing.Point(6, 180);
+            this.LibraryCardCheckbox.Name = "LibraryCardCheckbox";
+            this.LibraryCardCheckbox.Size = new System.Drawing.Size(114, 17);
+            this.LibraryCardCheckbox.TabIndex = 7;
+            this.LibraryCardCheckbox.Text = "Track Library Card";
+            this.LibraryCardCheckbox.UseVisualStyleBackColor = true;
+            this.LibraryCardCheckbox.CheckedChanged += new System.EventHandler(this.LibraryCardCheckbox_CheckedChanged);
             // 
             // alwaysOpTopCheckbox
             // 
@@ -378,17 +391,18 @@ namespace SotnRandoTools
             this.saveLayoutDialog.Filter = "layout config files|*.ini";
             this.saveLayoutDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.saveLayoutDialog_FileOk);
             // 
-            // LibraryCardCheckbox
+            // timerCheckBox
             // 
-            this.LibraryCardCheckbox.AutoSize = true;
-            this.LibraryCardCheckbox.Location = new System.Drawing.Point(6, 180);
-            this.LibraryCardCheckbox.Name = "LibraryCardCheckbox";
-            this.LibraryCardCheckbox.Size = new System.Drawing.Size(114, 17);
-            this.LibraryCardCheckbox.TabIndex = 7;
-            this.LibraryCardCheckbox.Text = "Track Library Card";
-            this.LibraryCardCheckbox.UseVisualStyleBackColor = true;
-			this.LibraryCardCheckbox.CheckedChanged += new System.EventHandler(this.LibraryCardCheckbox_CheckedChanged);
-			//
+            this.timerCheckBox.AutoSize = true;
+            this.timerCheckBox.ForeColor = System.Drawing.Color.White;
+            this.timerCheckBox.Location = new System.Drawing.Point(6, 76);
+            this.timerCheckBox.Name = "timerCheckBox";
+            this.timerCheckBox.Size = new System.Drawing.Size(140, 17);
+            this.timerCheckBox.TabIndex = 10;
+            this.timerCheckBox.Text = "Show timer (HH:MM:SS)";
+            this.timerCheckBox.UseVisualStyleBackColor = true;
+            this.timerCheckBox.CheckedChanged += new System.EventHandler(this.timerCheckBox_CheckedChanged);
+            // 
             // AutotrackerSettingsPanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -454,5 +468,6 @@ namespace SotnRandoTools
 		private System.Windows.Forms.CheckBox alwaysOpTopCheckbox;
 		private System.Windows.Forms.ComboBox customExtensionCombo;
 		private System.Windows.Forms.CheckBox LibraryCardCheckbox;
+		private System.Windows.Forms.CheckBox timerCheckBox;
 	}
 }

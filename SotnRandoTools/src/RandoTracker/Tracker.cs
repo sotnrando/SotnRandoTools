@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SotnApi;
 using SotnApi.Constants.Addresses;
 using SotnApi.Constants.Values.Alucard.Enums;
 using SotnApi.Constants.Values.Game;
@@ -199,6 +200,7 @@ namespace SotnRandoTools.RandoTracker
 		private bool started = false;
 		private bool finished = false;
 		private bool replaySaved = false;
+		private bool firstSaveFileLoaded = false;
 		private TimeSpan finalTime;
 		private Stopwatch stopWatch = new Stopwatch();
 
@@ -222,6 +224,14 @@ namespace SotnRandoTools.RandoTracker
 
 		public string SeedInfo { get; set; }
 		public string Complexity { get; set; }
+		public string TimerText
+		{
+			get
+			{
+				TimeSpan elapsed = finished ? finalTime : stopWatch.Elapsed;
+				return $"{(int) elapsed.TotalHours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}.{elapsed.Milliseconds:D3}";
+			}
+		}
 		public Locations Locations
 		{
 			get
@@ -330,6 +340,7 @@ namespace SotnRandoTools.RandoTracker
 
 			CheckStart();
 			CheckSplit();
+			CheckFirstSaveFileLoad();
 			MuteMusic();
 		}
 
@@ -1442,6 +1453,25 @@ namespace SotnRandoTools.RandoTracker
 			if (toolConfig.Tracker.EnableAutosplitter)
 			{
 				autosplitter.Disconnect();
+			}
+		}
+
+		void CheckFirstSaveFileLoad()
+		{
+			if (firstSaveFileLoaded) return;
+			if (sotnApi.GameApi.Status == Status.LoadingSaveFile)
+			{
+				SetPaletteForSpecialNames();
+				firstSaveFileLoaded = true;
+			}
+		}
+
+		private void SetPaletteForSpecialNames()
+		{
+			if(sotnApi.GameApi.SaveFileName == "derdrach")
+			{
+				sotnApi.AlucardApi.SetAlucardPalette(Extras.GoldPalette, Extras.GoldPaletteDark);
+				sotnApi.AlucardApi.SetAlucardLiner(Extras.GoldLiner);
 			}
 		}
 	}

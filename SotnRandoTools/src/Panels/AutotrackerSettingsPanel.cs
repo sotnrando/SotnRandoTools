@@ -50,6 +50,7 @@ namespace SotnRandoTools
 			replaysCheckBox.Checked = toolConfig.Tracker.SaveReplays;
 			overlayCheckBox.Checked = toolConfig.Tracker.UseOverlay;
 			autosplitterCheckBox.Checked = toolConfig.Tracker.EnableAutosplitter;
+			timerCheckBox.Checked = toolConfig.Tracker.Timer;
 			muteCheckBox.Checked = toolConfig.Tracker.MuteMusic;
 			stereoCheckBox.Checked = toolConfig.Tracker.Stereo;
 			alwaysOpTopCheckbox.Checked = toolConfig.Tracker.AlwaysOnTop;
@@ -129,6 +130,11 @@ namespace SotnRandoTools
 		private void autosplitterCheckBox_CheckedChanged(object sender, EventArgs e)
 		{
 			toolConfig.Tracker.EnableAutosplitter = autosplitterCheckBox.Checked;
+		}
+
+		private void timerCheckBox_CheckedChanged(object sender, EventArgs e)
+		{
+			toolConfig.Tracker.Timer = timerCheckBox.Checked;
 		}
 
 		private void muteCheckBox_CheckedChanged(object sender, EventArgs e)
