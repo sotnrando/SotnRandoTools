@@ -209,7 +209,7 @@ namespace SotnRandoTools.RandoTracker
 			{
 				string preset = tracker.CurrentPreset.ToLower();
 
-				if (preset.Contains("recycler"))
+				if (new[] { "recycler", "hoarder"} .Any(p => preset.Contains(p)))
 				{
 					spriteOrder = recyclerSpriteIdOrder;
 				}
@@ -830,7 +830,7 @@ namespace SotnRandoTools.RandoTracker
 				return Paths.DogTexture;
 
 			// Recycler (any variant)
-			if (id.Contains("recycler"))
+			if (id.Contains("recycler") || id.Contains("hoarder"))
 			{
 				OnResize();
 				return Paths.RecyclerTexture;
