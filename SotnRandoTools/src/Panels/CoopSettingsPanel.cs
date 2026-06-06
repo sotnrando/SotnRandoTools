@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using SotnRandoTools.Configuration.Interfaces;
 using SotnRandoTools.Services;
@@ -24,6 +24,7 @@ namespace SotnRandoTools
 			portTextBox.Text = toolConfig.Coop.DefaultPort.ToString();
 			volumeBar.Value = toolConfig.Coop.Volume;
 			sendComboBox.SelectedIndex = toolConfig.Coop.SendButton;
+			webSocketUrlTextBox.Text = toolConfig.Coop.WebSocketUrl ?? "";
 		}
 
 		private void saveButton_Click(object sender, EventArgs e)
@@ -48,6 +49,11 @@ namespace SotnRandoTools
 		private void sendComboBox_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			toolConfig.Coop.SendButton = sendComboBox.SelectedIndex;
+		}
+
+		private void webSocketUrlTextBox_TextChanged(object sender, EventArgs e)
+		{
+			toolConfig.Coop.WebSocketUrl = webSocketUrlTextBox.Text;
 		}
 	}
 }

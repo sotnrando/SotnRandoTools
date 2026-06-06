@@ -88,6 +88,7 @@ namespace SotnRandoTools.Configuration
 		public bool Locations { get; set; }
 		public bool SaveReplays { get; set; }
 		public bool EnableAutosplitter { get; set; }
+		public bool Timer { get; set; }
 		public bool UseOverlay { get; set; }
 		public bool MuteMusic { get; set; }
 		public bool Stereo { get; set; }
@@ -108,6 +109,7 @@ namespace SotnRandoTools.Configuration
 			Locations = true;
 			SaveReplays = true;
 			EnableAutosplitter = true;
+			Timer = false;
 			UseOverlay = true;
 			MuteMusic = false;
 			Stereo = true;

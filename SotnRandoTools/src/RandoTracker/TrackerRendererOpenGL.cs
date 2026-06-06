@@ -36,7 +36,7 @@ namespace SotnRandoTools.RandoTracker
 		public float ScaledGlyphHeight { get; private set; }
 		public bool IncludeLibraryCard;
 
-		public unsafe Text(string text, int windowWidth, int windowHeight, int collectedUniform, GL gl)
+		public unsafe Text(string text, int windowWidth, int windowHeight, int collectedUniform, GL gl, bool anchorBottom = false)
 		{
 			Gl = gl;
 			this.collectedUniform = collectedUniform;
@@ -71,7 +71,7 @@ namespace SotnRandoTools.RandoTracker
 			}
 
 			float xpos = TextPadding;
-			float ypos = windowHeight - (TextPadding + (glyphHeight * scale));
+			float ypos = anchorBottom ? TextPadding : windowHeight - (TextPadding + (glyphHeight * scale));
 
 			for (int i = 0; i < text.Length; i++)
 			{
@@ -514,6 +514,7 @@ namespace SotnRandoTools.RandoTracker
 		private int LabelOffset = 40;
 		private const int ItemSize = 14;
 		private const int CellPadding = 2;
+		private const int TimerReserve = 25;
 		private const double PixelPerfectSnapMargin = 0.22;
 		private Color clear = Color.FromArgb(17, 0, 17);
 
@@ -528,6 +529,7 @@ namespace SotnRandoTools.RandoTracker
 		private Sprites sprites;
 		private Text seedInfo;
 		private Text complexity;
+		private Text timer;
 		private int columns = 5;
 		private Vector2[] relicSlots = new Vector2[120];
 		private float[] collected = new float[70];
@@ -978,6 +980,13 @@ namespace SotnRandoTools.RandoTracker
 				sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl, LibraryCard);
 			}
 
+			// TIMER TEXT
+			if (toolConfig.Tracker.Timer && timer.text != tracker.TimerText)
+			{
+				timer.Dispose();
+				timer = new Text(tracker.TimerText, Width, Height, collectedUniform, Gl, true);
+			}
+
 			// SPRITE REBUILD ON CHANGE
 			if (changes || !toolConfig.Tracker.GridLayout)
 			{
@@ -1014,6 +1023,10 @@ namespace SotnRandoTools.RandoTracker
 			sprites.Draw();
 			seedInfo.Draw();
 			complexity.Draw();
+			if (toolConfig.Tracker.Timer)
+			{
+				timer.Draw();
+			}
 			SDL_GL_SwapWindow(window);
 		}
 
@@ -1040,8 +1053,13 @@ namespace SotnRandoTools.RandoTracker
 				seedInfo.Dispose();
 				complexity.Dispose();
 			}
+			if (timer != null)
+			{
+				timer.Dispose();
+			}
 			seedInfo = new Text(tracker.SeedInfo, Width, Height, collectedUniform, Gl);
 			complexity = new Text(tracker.Complexity, Width, Height - (int)seedInfo.ScaledGlyphHeight , collectedUniform, Gl);
+			timer = new Text(tracker.TimerText, Width, Height, collectedUniform, Gl, true);
 			sprites = new Sprites(Scale, relicSlots, tracker, columns, toolConfig.Tracker.GridLayout, toolConfig.Tracker.ProgressionRelicsOnly, Gl, LibraryCard);
 			CheckForErrors();
 		}
@@ -1056,6 +1074,10 @@ namespace SotnRandoTools.RandoTracker
 			{
 				seedInfo.Dispose();
 				complexity.Dispose();
+			}
+			if (timer != null)
+			{
+				timer.Dispose();
 			}
 		}
 
@@ -1118,8 +1140,11 @@ namespace SotnRandoTools.RandoTracker
 			// --- 4. Compute scale ---
 			int cellSize = ItemSize + CellPadding;
 
+			// Reserve space at the bottom for the timer so icons (e.g. Library Card) don't get covered.
+			int bottomReserve = toolConfig.Tracker.Timer ? TimerReserve : 0;
+
 			float cellsPerColumn =
-				(height - (LabelOffset + CellPadding)) / (float) (cellSize * totalRows);
+				(height - (LabelOffset + CellPadding) - bottomReserve) / (float) (cellSize * totalRows);
 
 			float cellsPerRow =
 				(width - (CellPadding * 5)) / (float) (cellSize * columns);

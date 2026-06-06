@@ -31,72 +31,82 @@ namespace SotnRandoTools.Coop
 
 		private void ProcessMessage(byte[] data)
 		{
-			MessageType type = (MessageType) data[0];
-			ushort index = BitConverter.ToUInt16(data, 1);
-			ushort index2 = BitConverter.ToUInt16(data, 3);
-			byte indexByte = data[1];
-			byte dataByte = 0;
-			if (data.Length > 2)
+			try
 			{
-				dataByte = data[2];
-			}
-			switch (type)
-			{
-				case MessageType.Relic:
-					if (!sotnApi.AlucardApi.HasRelic((Relic) indexByte))
-					{
-						sotnApi.AlucardApi.GrantRelic((Relic) indexByte);
-						coopController.CoopState.relics[indexByte].status = true;
-						notificationService.AddMessage(SotnApi.Constants.Values.Alucard.Equipment.Relics[indexByte]);
+				MessageType type = (MessageType) data[0];
+				ushort index = BitConverter.ToUInt16(data, 1);
+				ushort index2 = BitConverter.ToUInt16(data, 3);
+				byte indexByte = data[1];
+				byte dataByte = 0;
+				if (data.Length > 2)
+				{
+					dataByte = data[2];
+				}
+				switch (type)
+				{
+					case MessageType.Relic:
+						if (!sotnApi.AlucardApi.HasRelic((Relic) indexByte))
+						{
+							sotnApi.AlucardApi.GrantRelic((Relic) indexByte);
+							coopController.CoopState.relics[indexByte].status = true;
+							notificationService.AddMessage(SotnApi.Constants.Values.Alucard.Equipment.Relics[indexByte]);
+							notificationService.PlayAlert();
+						}
+						break;
+					case MessageType.Location:						
+						sotnApi.GameApi.SetRoomToVisited(SotnApi.Constants.Addresses.Game.MapStart + index);
+						coopController.CoopState.locations[index2].status = true;
+						sotnApi.AlucardApi.Rooms++;
+						//Console.WriteLine($"Received location: {index}");
+						break;
+					case MessageType.Item:
+						sotnApi.AlucardApi.GrantItemByName(Equipment.Items[index]);
+						notificationService.AddMessage(Equipment.Items[index]);
 						notificationService.PlayAlert();
-					}
-					break;
-				case MessageType.Location:
-					sotnApi.GameApi.SetRoomToVisited(SotnApi.Constants.Addresses.Game.MapStart + index);
-					coopController.CoopState.locations[index2].status = true;
-					sotnApi.AlucardApi.Rooms++;
-					//Console.WriteLine($"Received location: {index}");
-					break;
-				case MessageType.Item:
-					sotnApi.AlucardApi.GrantItemByName(Equipment.Items[index]);
-					notificationService.AddMessage(Equipment.Items[index]);
-					notificationService.PlayAlert();
-					//Console.WriteLine($"Received item: {Equipment.Items[index]}");
-					break;
-				case MessageType.WarpFirstCastle:
-					sotnApi.AlucardApi.WarpsFirstCastle |= dataByte;
-					coopController.CoopState.WarpsFirstCastle.value = (byte) sotnApi.AlucardApi.WarpsFirstCastle;
-					notificationService.AddMessage($"Received warp: {(Warp) index}");
-					//Console.WriteLine($"Received warp: {(Warp) index}");
-					break;
-				case MessageType.WarpSecondCastle:
-					sotnApi.AlucardApi.WarpsSecondCastle |= dataByte;
-					coopController.CoopState.WarpsSecondCastle.value = (byte) sotnApi.AlucardApi.WarpsSecondCastle;
-					notificationService.AddMessage($"Received warp: Inverted {(Warp) index}");
-					//Console.WriteLine($"Received warp: Inverted {(Warp) index}");
-					break;
-				case MessageType.Shortcut:
-					if (index > Enum.GetNames(typeof(Shortcut)).Length - 1)
-					{
-						DecodeShortcuts(index);
-					}
-					else
-					{
-						DecodeShortcut((Shortcut) index);
-					}
-					coopController.CoopState.shortcuts[index].status = true;
-					break;
-				case MessageType.SynchRequest:
-					coopController.SynchRequested = true;
-					//Console.WriteLine($"Sending Synch");
-					break;
-				case MessageType.SynchAll:
-					DecodeSynch(data);
-					//Console.WriteLine($"Received relics, warps and shortcuts");
-					break;
-				default:
-					break;
+						//Console.WriteLine($"Received item: {Equipment.Items[index]}");
+						break;
+					case MessageType.WarpFirstCastle:
+						sotnApi.AlucardApi.WarpsFirstCastle |= indexByte;
+						coopController.CoopState.WarpsFirstCastle.value = (byte) sotnApi.AlucardApi.WarpsFirstCastle;
+						notificationService.AddMessage($"Received warp: {(Warp) indexByte}");
+						//Console.WriteLine($"Received warp: {(Warp) indexByte}");
+						break;
+					case MessageType.WarpSecondCastle:
+						sotnApi.AlucardApi.WarpsSecondCastle |= indexByte;
+						coopController.CoopState.WarpsSecondCastle.value = (byte) sotnApi.AlucardApi.WarpsSecondCastle;
+						notificationService.AddMessage($"Received warp: Inverted {(Warp) indexByte}");
+						//Console.WriteLine($"Received warp: Inverted {(Warp) indexByte}");
+						break;
+					case MessageType.Shortcut:
+						if (index > Enum.GetNames(typeof(Shortcut)).Length - 1)
+						{
+							DecodeShortcuts(index);
+						}
+						else
+						{
+							DecodeShortcut((Shortcut) index);
+						}
+						coopController.CoopState.shortcuts[index].status = true;
+						break;
+					case MessageType.SynchRequest:
+						coopController.SynchRequested = true;
+						notificationService.AddMessage($"Received Synch Request");
+						//Console.WriteLine($"Sending Synch");
+						break;
+					case MessageType.SynchAll:
+						DecodeSynch(data);
+						notificationService.AddMessage($"Received Synch All");
+						//Console.WriteLine($"Received Synch");
+						break;
+					default:
+						break;
+				}
 			}
+			catch (Exception ex)
+			{
+				return;
+			}			
+			
 		}
 
 		public void Update()

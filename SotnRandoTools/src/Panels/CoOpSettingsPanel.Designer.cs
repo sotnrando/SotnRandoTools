@@ -1,4 +1,4 @@
-﻿
+
 namespace SotnRandoTools
 {
     partial class CoopSettingsPanel
@@ -39,6 +39,8 @@ namespace SotnRandoTools
             this.volumeBar = new System.Windows.Forms.TrackBar();
             this.sendBindLabel = new System.Windows.Forms.Label();
             this.sendComboBox = new System.Windows.Forms.ComboBox();
+            this.webSocketUrlLabel = new System.Windows.Forms.Label();
+            this.webSocketUrlTextBox = new System.Windows.Forms.TextBox();
             this.optionsBox.SuspendLayout();
             this.volumeBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.volumeBar)).BeginInit();
@@ -84,6 +86,8 @@ namespace SotnRandoTools
             this.optionsBox.Controls.Add(this.sendBindLabel);
             this.optionsBox.Controls.Add(this.portLabel);
             this.optionsBox.Controls.Add(this.portTextBox);
+            this.optionsBox.Controls.Add(this.webSocketUrlLabel);
+            this.optionsBox.Controls.Add(this.webSocketUrlTextBox);
             this.optionsBox.ForeColor = System.Drawing.Color.White;
             this.optionsBox.Location = new System.Drawing.Point(6, 56);
             this.optionsBox.Name = "optionsBox";
@@ -153,6 +157,23 @@ namespace SotnRandoTools
             this.sendComboBox.TabIndex = 3;
             this.sendComboBox.SelectedIndexChanged += new System.EventHandler(this.sendComboBox_SelectedIndexChanged);
             // 
+            // webSocketUrlLabel
+            // 
+            this.webSocketUrlLabel.AutoSize = true;
+            this.webSocketUrlLabel.Location = new System.Drawing.Point(6, 102);
+            this.webSocketUrlLabel.Name = "webSocketUrlLabel";
+            this.webSocketUrlLabel.Size = new System.Drawing.Size(85, 13);
+            this.webSocketUrlLabel.TabIndex = 4;
+            this.webSocketUrlLabel.Text = "WebSocket URL:";
+            // 
+            // webSocketUrlTextBox
+            // 
+            this.webSocketUrlTextBox.Location = new System.Drawing.Point(91, 99);
+            this.webSocketUrlTextBox.Name = "webSocketUrlTextBox";
+            this.webSocketUrlTextBox.Size = new System.Drawing.Size(282, 21);
+            this.webSocketUrlTextBox.TabIndex = 5;
+            this.webSocketUrlTextBox.TextChanged += new System.EventHandler(this.webSocketUrlTextBox_TextChanged);
+            // 
             // CoopSettingsPanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -190,5 +211,7 @@ namespace SotnRandoTools
         private System.Windows.Forms.TrackBar volumeBar;
 		private System.Windows.Forms.ComboBox sendComboBox;
 		private System.Windows.Forms.Label sendBindLabel;
+		private System.Windows.Forms.Label webSocketUrlLabel;
+		private System.Windows.Forms.TextBox webSocketUrlTextBox;
 	}
 }

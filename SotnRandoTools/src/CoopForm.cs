@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -22,6 +22,7 @@ namespace SotnRandoTools
 		private readonly INotificationService notificationService;
 		private CoopViewModel coopViewModel = new CoopViewModel();
 		private bool addressValidated = false;
+		private bool onlineConnected = false;
 		private Color BaseBackground = Color.FromArgb(17, 0, 17);
 
 		public CoopForm(IToolConfig toolConfig, ISotnApi sotnApi, IJoypadApi joypadApi, INotificationService notificationService, ILocationTracker locationTracker)
@@ -71,6 +72,7 @@ namespace SotnRandoTools
 					this.targetIp.Enabled = false;
 					this.portNumeric.Enabled = false;
 					this.IPlabel.Enabled = false;
+					SetOnlineGroupEnabled(false);
 					break;
 				case NetworkStatus.Stopped:
 					notificationService.AddMessage("Server stopped");
@@ -81,6 +83,7 @@ namespace SotnRandoTools
 					this.targetIp.Enabled = true;
 					this.portNumeric.Enabled = true;
 					this.IPlabel.Enabled = true;
+					SetOnlineGroupEnabled(true);
 					break;
 				case NetworkStatus.ServerError:
 					notificationService.AddMessage("Server error");
@@ -91,6 +94,7 @@ namespace SotnRandoTools
 					this.targetIp.Enabled = true;
 					this.portNumeric.Enabled = true;
 					this.IPlabel.Enabled = true;
+					SetOnlineGroupEnabled(true);
 					break;
 				case NetworkStatus.ClientError:
 					notificationService.AddMessage("Client error");
@@ -101,6 +105,7 @@ namespace SotnRandoTools
 					this.hostButton.Enabled = true;
 					this.targetIp.Enabled = true;
 					this.portNumeric.Enabled = true;
+					SetOnlineGroupEnabled(true);
 					break;
 				case NetworkStatus.ClientConnected:
 					notificationService.AddMessage("Client connected");
@@ -112,58 +117,122 @@ namespace SotnRandoTools
 					break;
 				case NetworkStatus.Connected:
 					notificationService.AddMessage("Connected");
-					this.connectButton.Text = "Disconnect";
-					this.connectButton.ForeColor = Color.Black;
-					this.connectButton.BackColor = Color.SpringGreen;
-					this.hostButton.BackColor = BaseBackground;
-					this.hostButton.ForeColor = Color.White;
-					this.connectButton.Enabled = true;
+					if (onlineConnected)
+					{
+						this.onlineConnectButton.Text = "Disconnect";
+						this.onlineConnectButton.ForeColor = Color.Black;
+						this.onlineConnectButton.BackColor = Color.SpringGreen;
+						this.onlineConnectButton.Enabled = true;
+						this.roomIdTextBox.Enabled = false;
+						this.hostButton.Enabled = false;
+						this.connectButton.Enabled = false;
+						this.targetIp.Enabled = false;
+						this.portNumeric.Enabled = false;
+					}
+					else
+					{
+						this.connectButton.Text = "Disconnect";
+						this.connectButton.ForeColor = Color.Black;
+						this.connectButton.BackColor = Color.SpringGreen;
+						this.hostButton.BackColor = BaseBackground;
+						this.hostButton.ForeColor = Color.White;
+						this.connectButton.Enabled = true;
+						this.hostButton.Enabled = false;
+						this.targetIp.Enabled = false;
+						this.portNumeric.Enabled = false;
+						SetOnlineGroupEnabled(false);
+					}
+					break;
+				case NetworkStatus.JoiningRoom:
+					notificationService.AddMessage("Joining room...");
+					this.onlineConnectButton.Text = "Joining...";
+					this.onlineConnectButton.BackColor = Color.Coral;
+					this.onlineConnectButton.Enabled = true;
+					this.roomIdTextBox.Enabled = false;
 					this.hostButton.Enabled = false;
+					this.connectButton.Enabled = false;
 					this.targetIp.Enabled = false;
 					this.portNumeric.Enabled = false;
 					break;
 				case NetworkStatus.Reconnecting:
 					notificationService.AddMessage("Reconnecting");
-					this.connectButton.Text = "Reconnecting";
-					this.connectButton.BackColor = Color.Coral;
-					this.hostButton.BackColor = BaseBackground;
-					this.hostButton.ForeColor = Color.White;
-					this.connectButton.Enabled = true;
-					this.hostButton.Enabled = false;
-					this.targetIp.Enabled = false;
-					this.portNumeric.Enabled = false;
+					if (onlineConnected)
+					{
+						this.onlineConnectButton.Text = "Reconnecting";
+						this.onlineConnectButton.BackColor = Color.Coral;
+						this.onlineConnectButton.Enabled = true;
+						this.roomIdTextBox.Enabled = false;
+						this.hostButton.Enabled = false;
+						this.connectButton.Enabled = false;
+						this.targetIp.Enabled = false;
+						this.portNumeric.Enabled = false;
+					}
+					else
+					{
+						this.connectButton.Text = "Reconnecting";
+						this.connectButton.BackColor = Color.Coral;
+						this.hostButton.BackColor = BaseBackground;
+						this.hostButton.ForeColor = Color.White;
+						this.connectButton.Enabled = true;
+						this.hostButton.Enabled = false;
+						this.targetIp.Enabled = false;
+						this.portNumeric.Enabled = false;
+						SetOnlineGroupEnabled(false);
+					}
 					break;
 				case NetworkStatus.Disconnected:
 					notificationService.AddMessage("Disconnected");
-					this.connectButton.Text = "Connect";
-					this.connectButton.BackColor = Color.Crimson;
-					this.connectButton.ForeColor = Color.White;
-					this.hostButton.Enabled = true;
-					this.hostButton.Enabled = true;
-					this.targetIp.Enabled = true;
-					this.portNumeric.Enabled = true;
+					ResetAllControls();
 					break;
 				case NetworkStatus.TimedOut:
 					notificationService.AddMessage("Timed out");
-					this.connectButton.Text = "Connect";
-					this.connectButton.BackColor = Color.Crimson;
-					this.connectButton.ForeColor = Color.White;
-					this.connectButton.Enabled = true;
-					this.hostButton.Enabled = true;
-					this.targetIp.Enabled = true;
-					this.portNumeric.Enabled = true;
+					ResetAllControls();
+					if (onlineConnected)
+					{
+						this.onlineConnectButton.BackColor = Color.Crimson;
+					}
+					else
+					{
+						this.connectButton.BackColor = Color.Crimson;
+						this.connectButton.ForeColor = Color.White;
+					}
+					onlineConnected = false;
 					break;
 				case NetworkStatus.ManuallyDisconnected:
 					notificationService.AddMessage("Disconnected");
-					this.connectButton.Text = "Connect";
-					this.connectButton.BackColor = BaseBackground;
-					this.connectButton.ForeColor = Color.White;
-					this.hostButton.Enabled = true;
-					this.hostButton.Enabled = true;
-					this.targetIp.Enabled = true;
-					this.portNumeric.Enabled = true;
+					ResetAllControls();
+					onlineConnected = false;
 					break;
 				default: break;
+			}
+		}
+
+		private void ResetAllControls()
+		{
+			this.connectButton.Text = "Connect";
+			this.connectButton.BackColor = BaseBackground;
+			this.connectButton.ForeColor = Color.White;
+			this.connectButton.Enabled = true;
+			this.hostButton.Enabled = true;
+			this.hostButton.BackColor = BaseBackground;
+			this.hostButton.ForeColor = Color.White;
+			this.targetIp.Enabled = true;
+			this.portNumeric.Enabled = true;
+			this.onlineConnectButton.Text = "Connect";
+			this.onlineConnectButton.BackColor = BaseBackground;
+			this.onlineConnectButton.ForeColor = Color.White;
+			this.onlineConnectButton.Enabled = true;
+			this.roomIdTextBox.Enabled = true;
+		}
+
+		private void SetOnlineGroupEnabled(bool enabled)
+		{
+			this.onlineConnectButton.Enabled = enabled;
+			this.roomIdTextBox.Enabled = enabled;
+			if (enabled)
+			{
+				this.onlineConnectButton.BackColor = BaseBackground;
+				this.onlineConnectButton.ForeColor = Color.White;
 			}
 		}
 
@@ -230,8 +299,40 @@ namespace SotnRandoTools
 			}
 			else
 			{
+				onlineConnected = false;
 				coopController.Connect(hostAddress[0], Int32.Parse(hostAddress[1]));
 			}
+		}
+
+		private void onlineConnectButton_Click(object sender, EventArgs e)
+		{
+			if (onlineConnected && coopViewModel.Status == NetworkStatus.Connected)
+			{
+				coopController.Disconnect();
+				onlineConnected = false;
+				return;
+			}
+
+			string roomId = this.roomIdTextBox.Text.Trim();
+			if (string.IsNullOrEmpty(roomId))
+			{
+				this.addressTooltip.SetToolTip(roomIdTextBox, "Room ID cannot be empty!");
+				this.addressTooltip.ToolTipIcon = ToolTipIcon.Warning;
+				this.addressTooltip.Active = true;
+				return;
+			}
+
+			string websocketUrl = toolConfig.Coop.WebSocketUrl;
+			if (string.IsNullOrEmpty(websocketUrl))
+			{
+				this.addressTooltip.SetToolTip(roomIdTextBox, "WebSocket URL not configured! Set it in Co-op Settings.");
+				this.addressTooltip.ToolTipIcon = ToolTipIcon.Warning;
+				this.addressTooltip.Active = true;
+				return;
+			}
+
+			onlineConnected = true;
+			coopController.ConnectOnline(websocketUrl, roomId);
 		}
 
 		private void targetIp_Validating(object sender, System.ComponentModel.CancelEventArgs e)
@@ -264,10 +365,9 @@ namespace SotnRandoTools
 
 		private void CoopForm_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			coopController.Disconnect();
-			coopController.StopServer();
 			coopController.DisposeAll();
 			coopController = null;
+			onlineConnected = false;
 		}
 
 		private void targetIp_TextChanged(object sender, EventArgs e)

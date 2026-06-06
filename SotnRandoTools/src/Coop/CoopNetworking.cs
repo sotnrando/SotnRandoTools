@@ -1,15 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using SotnRandoTools.Coop.Enums;
+using SotnRandoTools.Coop.Interfaces;
 using SotnRandoTools.Coop.Models;
 
 namespace SotnRandoTools.Coop
 {
-	internal sealed class CoopNetworking
+	internal sealed class CoopNetworking : ICoopTransport
 	{
 		private readonly ICoopViewModel coopViewModel;
 		private const int PingInterval = 500;
@@ -41,6 +42,7 @@ namespace SotnRandoTools.Coop
 			this.coopViewModel = coopViewModel ?? throw new ArgumentNullException(nameof(coopViewModel));
 			this.LocalPort = localPort;
 			this.MessageQueue = new ConcurrentQueue<byte[]>();
+			this.isServer = true;
 		}
 
 		public CoopNetworking(IPAddress remoteServerIp, int remoteServerPort, ICoopViewModel coopViewModel)
@@ -49,6 +51,7 @@ namespace SotnRandoTools.Coop
 			this.RemoteServerIp = remoteServerIp;
 			this.RemoteServerPort = remoteServerPort;
 			this.MessageQueue = new ConcurrentQueue<byte[]>();
+			this.isServer = false;
 		}
 
 		public int LocalPort { get; set; }
@@ -56,13 +59,36 @@ namespace SotnRandoTools.Coop
 		public int RemoteServerPort { get; set; }
 		public ConcurrentQueue<byte[]> MessageQueue { get; }
 
+		public void Open()
+		{
+			if (isServer)
+			{
+				Start();
+			}
+			else
+			{
+				Connect();
+			}
+		}
+
+		public void Close()
+		{
+			if (isServer)
+			{
+				Stop();
+			}
+			else
+			{
+				Disconnect();
+			}
+		}
+
 		public void Start()
 		{
 			if (started)
 			{
 				return;
 			}
-			isServer = true;
 			dataReceiverTokenSource = new();
 			acceptClientsTokenSource = new();
 			pingTokenSource = new();
@@ -100,7 +126,6 @@ namespace SotnRandoTools.Coop
 			{
 				return;
 			}
-			isServer = false;
 			tryConnectCancellationSource = new();
 			dataReceiverTokenSource = new();
 			sendTokenSource = new();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -262,6 +262,11 @@ namespace SotnRandoTools
 		{
 			if (sotnApi is not null && APIs.Joypad is not null)
 			{
+				if (trackerWindow is null)
+				{
+					System.Windows.Forms.MessageBox.Show("Please open the Tracker before launching Co-op.", "Co-op", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+					return;
+				}
 				if (coopForm is not null)
 				{
 					coopForm.Close();
