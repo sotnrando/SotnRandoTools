@@ -1468,7 +1468,7 @@ namespace SotnRandoTools.RandoTracker
 
 		private void SetPaletteForSpecialNames()
 		{
-			if(sotnApi.GameApi.SaveFileName == "derdrach")
+			if(sotnApi.GameApi.SaveFileName == "advent")
 			{
 				sotnApi.AlucardApi.SetAlucardPalette(Extras.GoldPalette, Extras.GoldPaletteDark);
 				sotnApi.AlucardApi.SetAlucardLiner(Extras.GoldLiner);
