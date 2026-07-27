@@ -32,6 +32,7 @@ namespace SotnRandoTools.RandoTracker
 		private readonly ISotnApi sotnApi;
 		private readonly INotificationService notificationService;
 
+
 		public readonly Locations locations = new Locations();
 		public readonly TrackerRelic[] relics = new TrackerRelic[30];
 		public readonly ushort[] relicCollectionTimes = new ushort[30];
@@ -1010,7 +1011,9 @@ namespace SotnRandoTools.RandoTracker
 			// Store for external use
 			CurrentPreset = preset;
 			CurrentPresetObj = presetObj;
+			CurrentExtension = finalExtension;
 		}
+		public string CurrentExtension { get; private set; } = "Unknown";
 
 		private void ColorAllLocations()
 		{
@@ -1472,6 +1475,11 @@ namespace SotnRandoTools.RandoTracker
 			{
 				sotnApi.AlucardApi.SetAlucardPalette(Extras.GoldPalette, Extras.GoldPaletteDark);
 				sotnApi.AlucardApi.SetAlucardLiner(Extras.GoldLiner);
+			}
+			if (sotnApi.GameApi.SaveFileName == "dracula")
+			{
+				sotnApi.AlucardApi.SetAlucardPalette(Extras.SilverPalette, Extras.SilverPaletteDark);
+				sotnApi.AlucardApi.SetAlucardLiner(Extras.SilverLiner);
 			}
 		}
 	}

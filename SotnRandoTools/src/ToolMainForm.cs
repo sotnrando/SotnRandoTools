@@ -68,6 +68,7 @@ namespace SotnRandoTools
 		private AutotrackerSettingsPanel? autotrackerSettingsPanel;
 		private CoopSettingsPanel? coopSettingsPanel;
 		private AboutPanel? aboutPanel;
+		private MapForm? mapForm;
 		private string _windowTitle = "Symphony of the Night Randomizer Tools";
 		private const int PanelOffset = 130;
 		private int cooldown = 0;
@@ -211,6 +212,10 @@ namespace SotnRandoTools
 					trackerWindow.UpdateTracker();
 				}
 			}
+			if (mapForm != null)
+			{
+				mapForm.UpdateMapTracker();
+			}
 		}
 
 		private async void ToolMainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -276,6 +281,33 @@ namespace SotnRandoTools
 				coopForm.Show();
 			}
 		}
+		private void mapLaunch_Click(object sender, EventArgs e)
+		{
+			// Ensure required components exist
+			if (sotnApi == null || APIs.Joypad == null)
+			{
+				MessageBox.Show(
+					"SotN must be running to launch the Map.",
+					"Map Overlay",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Warning);
+				return;
+			}
+
+			// Dispose any existing Map form
+			if (mapForm != null)
+			{
+				mapForm.Close();
+				mapForm.Dispose();
+			}
+
+			// Allow launching without Tracker
+			var tracker = trackerWindow != null ? trackerWindow.Tracker : null;
+
+			// Create and show the new Map form
+			mapForm = new MapForm(toolConfig, sotnApi, APIs.Joypad, notificationService, tracker);
+			mapForm.Show();
+		}
 
 		private void autotrackerSelect_Click(object sender, EventArgs e)
 		{
@@ -291,6 +323,10 @@ namespace SotnRandoTools
 
 			aboutPanel.Visible = false;
 			aboutPanel.Enabled = false;
+
+			mapLaunch.Visible = true;
+			mapLaunch.Enabled = true;
+
 		}
 
 		private void coopSelect_Click(object sender, EventArgs e)
@@ -307,6 +343,9 @@ namespace SotnRandoTools
 
 			aboutPanel.Visible = false;
 			aboutPanel.Enabled = false;
+
+			mapLaunch.Visible = false;
+			mapLaunch.Enabled = false;
 		}
 
 		private void aboutButton_Click(object sender, EventArgs e)
@@ -323,6 +362,9 @@ namespace SotnRandoTools
 			coopSettingsPanel.Enabled = false;
 			coopLaunch.Visible = false;
 			coopLaunch.Enabled = false;
+
+			mapLaunch.Visible = false;
+			mapLaunch.Enabled = false;
 		}
 
 		private void ToolMainForm_Move(object sender, EventArgs e)
@@ -340,6 +382,11 @@ namespace SotnRandoTools
 			updater.WorkingDirectory = (path + Paths.UpdaterFolderPath);
 			Process.Start(updater);
 			Application.Exit();
+		}
+
+		private void mapLaunch_Click_1(object sender, EventArgs e)
+		{
+
 		}
 	}
 }

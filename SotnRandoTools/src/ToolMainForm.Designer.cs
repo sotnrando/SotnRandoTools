@@ -1,4 +1,6 @@
 ﻿
+using System.Windows.Forms;
+
 namespace SotnRandoTools
 {
     partial class ToolMainForm
@@ -30,6 +32,7 @@ namespace SotnRandoTools
         private void InitializeComponent()
         {
             this.mainMenuPanel = new System.Windows.Forms.Panel();
+            this.mapLaunch = new System.Windows.Forms.Button();
             this.autotrackerSelect = new System.Windows.Forms.Button();
             this.aboutButton = new System.Windows.Forms.Button();
             this.coopLaunch = new System.Windows.Forms.Button();
@@ -40,6 +43,7 @@ namespace SotnRandoTools
             // 
             // mainMenuPanel
             // 
+            this.mainMenuPanel.Controls.Add(this.mapLaunch);
             this.mainMenuPanel.Controls.Add(this.autotrackerSelect);
             this.mainMenuPanel.Controls.Add(this.aboutButton);
             this.mainMenuPanel.Controls.Add(this.coopLaunch);
@@ -50,6 +54,22 @@ namespace SotnRandoTools
             this.mainMenuPanel.Name = "mainMenuPanel";
             this.mainMenuPanel.Size = new System.Drawing.Size(394, 127);
             this.mainMenuPanel.TabIndex = 0;
+            // 
+            // mapLaunch
+            // 
+            this.mapLaunch.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(57)))), ((int)(((byte)(21)))), ((int)(((byte)(57)))));
+            this.mapLaunch.FlatAppearance.BorderSize = 2;
+            this.mapLaunch.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(67)))), ((int)(((byte)(35)))), ((int)(((byte)(67)))));
+            this.mapLaunch.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(20)))), ((int)(((byte)(48)))));
+            this.mapLaunch.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.mapLaunch.Location = new System.Drawing.Point(106, 88);
+            this.mapLaunch.Name = "mapLaunch";
+            this.mapLaunch.Size = new System.Drawing.Size(89, 29);
+            this.mapLaunch.TabIndex = 0;
+            this.mapLaunch.Text = "Launch Map";
+            this.mapLaunch.UseVisualStyleBackColor = true;
+            this.mapLaunch.Visible = false;
+            this.mapLaunch.Click += new System.EventHandler(this.mapLaunch_Click);
             // 
             // autotrackerSelect
             // 
@@ -165,10 +185,12 @@ namespace SotnRandoTools
 
         private System.Windows.Forms.Panel mainMenuPanel;
         private System.Windows.Forms.Button autotrackerLaunch;
-        private System.Windows.Forms.Button coopLaunch;
+		private Button mapLaunch;
+		private System.Windows.Forms.Button coopLaunch;
         private System.Windows.Forms.Button coopSelect;
         private System.Windows.Forms.Button aboutButton;
         private System.Windows.Forms.Button autotrackerSelect;
+		private System.Windows.Forms.Button MapLaunch;
 	}
 }
 

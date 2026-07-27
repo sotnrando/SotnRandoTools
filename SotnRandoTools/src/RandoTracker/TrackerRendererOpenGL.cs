@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using BizHawk.Common;
+using BizHawk.Common.StringExtensions;
 using SDL2;
 using Silk.NET.OpenGL;
 using SotnRandoTools.Configuration;
@@ -36,117 +37,147 @@ namespace SotnRandoTools.RandoTracker
 		public float ScaledGlyphHeight { get; private set; }
 		public bool IncludeLibraryCard;
 
-		public unsafe Text(string text, int windowWidth, int windowHeight, int collectedUniform, GL gl, bool anchorBottom = false)
+		public unsafe Text(
+			string text,
+			int windowWidth,
+			int windowHeight,
+			int collectedUniform,
+			GL gl,
+			bool anchorBottom = false)
 		{
 			Gl = gl;
-			this.collectedUniform = collectedUniform;
 			this.text = text;
 			this.windowWidth = windowWidth;
 			this.windowHeight = windowHeight;
-			float rawScale = (float) (windowWidth - (TextPadding * 2)) / (float) ((text.Length) * (glyphWidth + 1));
-			scale = (float) Math.Floor((double) rawScale);
-			ScaledGlyphHeight = glyphHeight * scale;
+			this.collectedUniform = collectedUniform;
 
-			if (rawScale < 1)
-			{
-				scale = 1;
-			}
+			// Compute scale
+			float usableWidth = windowWidth - (TextPadding * 2);
+			float rawScale = usableWidth / (text.Length * (glyphWidth + 1));
 
-			if (scale > 4)
-			{
-				scale = 4;
-			}
+					scale = (int) Math.Floor(rawScale);
+					if (scale < 1) scale = 1;
+					else if (scale > 4) scale = 4;
 
+					ScaledGlyphHeight = glyphHeight * scale;
+
+			// Allocate index buffer (6 indices per character)
 			indices = new uint[text.Length * 6];
 
-			int ind = 0;
-			for (int i = 0; i < text.Length; i++)
+			for (int i = 0, ind = 0; i < text.Length; i++)
 			{
-				indices[ind++] = (uint) (0 + (i * 4));
-				indices[ind++] = (uint) (1 + (i * 4));
-				indices[ind++] = (uint) (2 + (i * 4));
-				indices[ind++] = (uint) (2 + (i * 4));
-				indices[ind++] = (uint) (3 + (i * 4));
-				indices[ind++] = (uint) (0 + (i * 4));
+				uint baseVert = (uint)(i * 4);
+
+				indices[ind++] = baseVert + 0;
+				indices[ind++] = baseVert + 1;
+				indices[ind++] = baseVert + 2;
+
+				indices[ind++] = baseVert + 2;
+				indices[ind++] = baseVert + 3;
+				indices[ind++] = baseVert + 0;
 			}
 
+			// Layout starting position
 			float xpos = TextPadding;
-			float ypos = anchorBottom ? TextPadding : windowHeight - (TextPadding + (glyphHeight * scale));
+			float ypos = anchorBottom
+				? TextPadding
+				: windowHeight - (TextPadding + ScaledGlyphHeight);
+
+			// Build vertex buffer
+			vertices.Clear();
+			float lineAdvance = ScaledGlyphHeight + 2;
+			float charAdvance = scale * (glyphWidth + 1);
 
 			for (int i = 0; i < text.Length; i++)
 			{
-				// NEW: handle newline
-				if (text[i] == '\n')
+				char c = text[i];
+
+				// Handle newline
+				if (c == '\n')
 				{
 					xpos = TextPadding;
-					ypos -= (glyphHeight * scale) + 2; // small spacing
+					ypos -= lineAdvance;
 					continue;
 				}
 
-				float textureCoordsX = ((byte) text[i] - 33) * textureItemWidth;
-				if (text[i] < '!' || text[i] > 'z')
-				{
-					textureCoordsX = ('?' - 33) * textureItemWidth;
-				}
-				//Vert1
-				vertices.Add(xpos);
-				vertices.Add(ypos + (glyphHeight * scale));
+				// Clamp unsupported characters to '?'
+				if (c < '!' || c > 'z')
+					c = '?';
 
-				vertices.Add(textureCoordsX);
-				vertices.Add(1.0f);
+				float texX = ((c - 33) * textureItemWidth);
 
-				vertices.Add(100.0f);
-				//Vert2
-				vertices.Add(xpos + (glyphWidth * scale));
-				vertices.Add(ypos + (glyphHeight * scale));
+				float x0 = xpos;
+				float x1 = xpos + (glyphWidth * scale);
+				float y0 = ypos;
+				float y1 = ypos + ScaledGlyphHeight;
 
-				vertices.Add(textureCoordsX + textureItemWidth);
-				vertices.Add(1.0f);
+				// Vertex format: X, Y, U, V, Layer
+				const float layer = 100.0f;
 
-				vertices.Add(100.0f);
-				//Vert3
-				vertices.Add(xpos + (glyphWidth * scale));
-				vertices.Add(ypos);
+				// TL
+				vertices.Add(x0); vertices.Add(y1);
+				vertices.Add(texX); vertices.Add(1.0f);
+				vertices.Add(layer);
 
-				vertices.Add(textureCoordsX + textureItemWidth);
-				vertices.Add(0.0f);
+				// TR
+				vertices.Add(x1); vertices.Add(y1);
+				vertices.Add(texX + textureItemWidth); vertices.Add(1.0f);
+				vertices.Add(layer);
 
-				vertices.Add(100.0f);
-				//Vert4
-				vertices.Add(xpos);
-				vertices.Add(ypos);
+				// BR
+				vertices.Add(x1); vertices.Add(y0);
+				vertices.Add(texX + textureItemWidth); vertices.Add(0.0f);
+				vertices.Add(layer);
 
-				vertices.Add(textureCoordsX);
-				vertices.Add(0.0f);
+				// BL
+				vertices.Add(x0); vertices.Add(y0);
+				vertices.Add(texX); vertices.Add(0.0f);
+				vertices.Add(layer);
 
-				vertices.Add(100.0f);
-
-				xpos += scale * (glyphWidth + 1);
+				xpos += charAdvance;
 			}
 
+			// Upload VAO + VBO
 			vertexArrayObject = Gl.GenVertexArray();
 			Gl.BindVertexArray(vertexArrayObject);
 
 			vertexBuffer = Gl.GenBuffer();
 			Gl.BindBuffer(BufferTargetARB.ArrayBuffer, vertexBuffer);
+
 			verticeArray = vertices.ToArray();
-			fixed (void* buf = verticeArray)
+			fixed (float* buf = verticeArray)
 			{
-				Gl.BufferData(BufferTargetARB.ArrayBuffer, (uint) (vertices.Count * sizeof(float)), buf, BufferUsageARB.StaticDraw);
+				Gl.BufferData(
+					BufferTargetARB.ArrayBuffer,
+					(uint)(verticeArray.Length * sizeof(float)),
+					buf,
+					BufferUsageARB.StaticDraw);
 			}
 
+			// Position (2 floats)
 			Gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
+
+			// UV (2 floats)
 			Gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 2 * sizeof(float));
+
+			// Layer (1 float)
 			Gl.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, 5 * sizeof(float), 4 * sizeof(float));
+
 			Gl.EnableVertexAttribArray(0);
 			Gl.EnableVertexAttribArray(1);
 			Gl.EnableVertexAttribArray(2);
 
+			// Upload index buffer
 			textIndexBuffer = Gl.GenBuffer();
 			Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, textIndexBuffer);
-			fixed (void* buf = indices)
+
+			fixed (uint* buf = indices)
 			{
-				Gl.BufferData(BufferTargetARB.ElementArrayBuffer, (uint) (indices.Length * sizeof(uint)), buf, BufferUsageARB.StaticDraw);
+				Gl.BufferData(
+					BufferTargetARB.ElementArrayBuffer,
+					(uint)(indices.Length * sizeof(uint)),
+					buf,
+					BufferUsageARB.StaticDraw);
 			}
 		}
 
@@ -1103,79 +1134,68 @@ namespace SotnRandoTools.RandoTracker
 
 		public void CalculateGrid(int width, int height)
 		{
-			// --- 1. Determine column count ---
-			columns = (int) (8f * (width / (float) height));
-			if (columns < 5)
-			{
-				columns = 5;
-			}
+			// 1. Determine column count
+			float aspect = width / (float) height;
+			columns = (int) (8f * aspect);
 
-			// 2: Force 7 columns for -spr26te presets
+			if (columns < 5)
+				columns = 5;
+
+			// Preset override
 			if (tracker.CurrentPreset != null &&
-				tracker.CurrentPreset.ToLower().Contains("-spr26te"))
+				tracker.CurrentPreset.Contains("-spr26te", StringComparison.OrdinalIgnoreCase))
 			{
 				columns = 7;
 			}
 
-			int relicCount = 25;
-
-			if (sprites != null)
-				relicCount += sprites.EmptyCellCount;
-
-			// Add boss rows only if enabled
+			// 2. Count item groups
+			int relicCount = 25 + (sprites?.EmptyCellCount ?? 0);
 			int bossCount = tracker.allBossesGoal ? tracker.timeAttacks.Length : 0;
 			int itemCount = tracker.importantItems.Length;
 
-			// Reserve 1 row for progression/thrust sword row
-			// Reserve 1 row for Vlad Relics
-			int reservedRows = 2;
+			// Reserved rows:
+			// - Progression / Thrust Sword
+			// - Vlad Relics
+			const int reservedRows = 2;
 
-			// Compute row counts
+			// 3. Compute row counts
 			int relicRows = (int) Math.Ceiling(relicCount / (float) columns);
 			int bossRows = (int) Math.Ceiling(bossCount / (float) columns);
 			int itemRows = (int) Math.Ceiling(itemCount / (float) columns);
 
-			int totalRows = relicRows + bossRows + reservedRows + itemCount;
+			int totalRows = relicRows + bossRows + itemRows + reservedRows;
 
-			// --- 4. Compute scale ---
+			// 4. Compute scale
 			int cellSize = ItemSize + CellPadding;
 
-			// Reserve space at the bottom for the timer so icons (e.g. Library Card) don't get covered.
 			int bottomReserve = toolConfig.Tracker.Timer ? TimerReserve : 0;
 
-			float cellsPerColumn =
-				(height - (LabelOffset + CellPadding) - bottomReserve) / (float) (cellSize * totalRows);
+			float usableHeight = height - (LabelOffset + CellPadding) - bottomReserve;
+			float usableWidth = width - (CellPadding * 5);
 
-			float cellsPerRow =
-				(width - (CellPadding * 5)) / (float) (cellSize * columns);
+			float scaleByHeight = usableHeight / (cellSize * totalRows);
+			float scaleByWidth = usableWidth / (cellSize * columns);
 
-			Scale = (float) Math.Round(Math.Min(cellsPerColumn, cellsPerRow), 2);
+			Scale = (float) Math.Round(Math.Min(scaleByHeight, scaleByWidth), 2);
 
-			double roundedScale = Math.Floor(Scale);
-			if (Scale - roundedScale < PixelPerfectSnapMargin)
-				Scale = (float) roundedScale;
+			float snapped = (float) Math.Floor(Scale);
 
-			// --- 5. Compute slot positions ---
-			int row = 0;
-			int col = 0;
+			if (Scale - snapped < PixelPerfectSnapMargin)
+				Scale = snapped;
 
+			// 5. Compute slot positions
 			int totalCells = columns * totalRows;
+			float scaledCell = cellSize * Scale;
 
 			for (int i = 0; i < totalCells; i++)
 			{
-				if (col == columns)
-				{
-					row++;
-					col = 0;
-				}
+				int row = i / columns;
+				int col = i % columns;
 
-				relicSlots[i] = new Vector2(
-					CellPadding + (col * cellSize * Scale),
-					Height - (LabelOffset + (ItemSize + CellPadding) * Scale)
-					- (row * cellSize * Scale)
-				);
+				float x = CellPadding + (col * scaledCell);
+				float y = Height - (LabelOffset + scaledCell) - (row * scaledCell);
 
-				col++;
+				relicSlots[i] = new Vector2(x, y);
 			}
 		}
 
