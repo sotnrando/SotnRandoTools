@@ -71,6 +71,10 @@ namespace SotnRandoTools.Coop
 			SendWarps();
 			SendShortcuts();
 			SendLocalMapTelemetry();
+			if (toolConfig.Coop.SendBossDefeat)
+			{
+				SendBosses();
+			}
 
 			if (coopController.SynchRequested)
 			{
@@ -117,7 +121,6 @@ namespace SotnRandoTools.Coop
 				{
 					lastLoggedRoom = currentMapX;
 
-					// FIX: Read whether the local player is in the Second Castle right now
 					byte activeCastle = (byte) (sotnApi.GameApi.SecondCastle ? 2 : 1);
 
 					fixed (byte* buffer = data6)
@@ -260,9 +263,11 @@ namespace SotnRandoTools.Coop
 
 		private unsafe void SendSynchAll()
 		{
-			data9[0] = (byte) MessageType.SynchAll;
-			data9[1] = coopController.CoopState.WarpsFirstCastle.value;
-			data9[2] = coopController.CoopState.WarpsSecondCastle.value;
+			byte[] data13 = new byte[13];
+			data13[0] = (byte) MessageType.SynchAll;
+			data13[1] = coopController.CoopState.WarpsFirstCastle.value;
+			data13[2] = coopController.CoopState.WarpsSecondCastle.value;
+
 			ushort shortcuts = 0;
 			for (ushort i = 0; i < coopController.CoopState.shortcuts.Length; i++)
 			{
@@ -271,6 +276,7 @@ namespace SotnRandoTools.Coop
 					shortcuts |= (ushort) Math.Pow(2, i);
 				}
 			}
+
 			int relicsNumber = 0;
 			for (int i = 0; i < coopController.CoopState.relics.Length; i++)
 			{
@@ -279,13 +285,39 @@ namespace SotnRandoTools.Coop
 					relicsNumber |= (int) Math.Pow(2, i);
 				}
 			}
-			fixed (byte* buffer = data9)
+
+			int bossesNumber = 0;
+			for (int i = 0; i < coopController.CoopState.bosses.Length; i++)
+			{
+				if (coopController.CoopState.bosses[i].status)
+				{
+					bossesNumber |= (int) Math.Pow(2, i);
+				}
+			}
+
+			fixed (byte* buffer = data13)
 			{
 				*((ushort*) (buffer + 3)) = shortcuts;
 				*((int*) (buffer + 5)) = relicsNumber;
+				*((int*) (buffer + 9)) = bossesNumber;
 			}
 
-			coopController.SendData(data9);
+			coopController.SendData(data13);
+		}
+		private void SendBosses()
+		{
+			for (int i = 0; i < coopController.CoopState.bosses.Length; i++)
+			{
+				// Check if a boss state changed and is now marked as defeated
+				if (coopController.CoopState.bosses[i].updated && coopController.CoopState.bosses[i].status)
+				{
+					data2[0] = (byte) MessageType.BossDefeat;
+					data2[1] = (byte) i;
+					coopController.SendData(data2);
+
+					coopController.CoopState.bosses[i].updated = false;
+				}
+			}
 		}
 	}
 }

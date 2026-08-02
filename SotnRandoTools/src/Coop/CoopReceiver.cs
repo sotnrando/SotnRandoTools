@@ -125,6 +125,9 @@ namespace SotnRandoTools.Coop
 							}
 						}
 						break;
+					case MessageType.BossDefeat:
+						HandleBossDefeat(data);
+						break;
 					default:
 						break;
 				}
@@ -300,17 +303,17 @@ namespace SotnRandoTools.Coop
 				//Console.WriteLine($"Received shortcut: {ShortcutFlags.KeepStairs}");
 			}
 		}
-
 		private void DecodeSynch(byte[] data)
 		{
 			sotnApi.AlucardApi.WarpsFirstCastle |= data[1];
 			coopController.CoopState.WarpsFirstCastle.value = (byte) sotnApi.AlucardApi.WarpsFirstCastle;
 			sotnApi.AlucardApi.WarpsSecondCastle |= data[2];
 			coopController.CoopState.WarpsSecondCastle.value = (byte) sotnApi.AlucardApi.WarpsSecondCastle;
+
 			ushort shortcut = BitConverter.ToUInt16(data, 3);
 			DecodeShortcuts(shortcut);
-			int encodedRelics = BitConverter.ToInt32(data, 5);
 
+			int encodedRelics = BitConverter.ToInt32(data, 5);
 			int relicCount = Enum.GetValues(typeof(Relic)).Length;
 			for (int i = 0; i < relicCount; i++)
 			{
@@ -320,6 +323,67 @@ namespace SotnRandoTools.Coop
 					sotnApi.AlucardApi.GrantRelic((Relic) i);
 					coopController.CoopState.relics[i].status = true;
 				}
+			}
+
+			if (data.Length >= 13)
+			{
+				int encodedBosses = BitConverter.ToInt32(data, 9);
+				int bossCount = coopController.CoopState.bosses.Length;
+
+				var memApiProperty = sotnApi.GetType().GetProperty("MemAPI");
+				if (memApiProperty is not null)
+				{
+					var memApiInstance = memApiProperty.GetValue(sotnApi);
+
+					var writeU32Method = memApiInstance?.GetType().GetMethod("WriteU32", new Type[] { typeof(long), typeof(uint) });
+
+					if (writeU32Method != null)
+					{
+						for (int i = 0; i < bossCount - 1; i++)
+						{
+							int flag = (int) Math.Pow(2, i);
+							if ((encodedBosses & flag) == flag)
+							{
+								coopController.CoopState.bosses[i].status = true;
+
+								long bossTimeAttackAddress = SotnApi.Constants.Addresses.TimeAttack.Times[i];
+
+								writeU32Method.Invoke(memApiInstance, new object[] { bossTimeAttackAddress, (uint) 1 });
+							}
+						}
+					}
+				}
+			}
+		}
+		private void HandleBossDefeat(byte[] data)
+		{
+			int bossIndex = data[1];
+
+			if (bossIndex >= 0 && bossIndex < coopController.CoopState.bosses.Length - 1)
+			{
+				coopController.CoopState.bosses[bossIndex].status = true;
+				coopController.CoopState.bosses[bossIndex].updated = false;
+
+				long bossTimeAttackAddress = SotnApi.Constants.Addresses.TimeAttack.Times[bossIndex];
+
+				var memApiProperty = sotnApi.GetType().GetProperty("MemAPI");
+				if (memApiProperty is not null)
+				{
+					var memApiInstance = memApiProperty.GetValue(sotnApi);
+
+					var writeU32Method = memApiInstance?.GetType().GetMethod("WriteU32", new Type[] { typeof(long), typeof(uint) });
+
+					if (writeU32Method != null)
+					{
+						writeU32Method.Invoke(memApiInstance, new object[] { bossTimeAttackAddress, (uint) 1 });
+					}
+				}
+
+				string bossName = ((SotnApi.Constants.Values.Game.Enums.Times) (bossIndex + 1)).ToString();
+				notificationService.AddMessage($"{bossName} Defeated!");
+				notificationService.PlayAlert();
+
+				coopController.InvokeBossDefeated(bossIndex, bossName);
 			}
 		}
 	}

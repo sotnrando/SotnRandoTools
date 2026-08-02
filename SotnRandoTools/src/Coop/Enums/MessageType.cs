@@ -17,6 +17,8 @@ namespace SotnRandoTools.Coop.Enums
 		Location,
 		// --- New Flags Added Below ---
 		PlayerCoords, // Live X, Y map coordinates
-		RoomHistory   // List or flags of explored rooms
+		RoomHistory,   // List or flags of explored rooms
+
+		BossDefeat
 	}
 }

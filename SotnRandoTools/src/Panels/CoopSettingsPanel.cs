@@ -13,7 +13,6 @@ namespace SotnRandoTools
 		{
 			if (toolConfig is null) throw new ArgumentNullException(nameof(toolConfig));
 			this.toolConfig = toolConfig;
-
 			InitializeComponent();
 		}
 
@@ -25,6 +24,9 @@ namespace SotnRandoTools
 			volumeBar.Value = toolConfig.Coop.Volume;
 			sendComboBox.SelectedIndex = toolConfig.Coop.SendButton;
 			webSocketUrlTextBox.Text = toolConfig.Coop.WebSocketUrl ?? "";
+
+			// Load the saved toggle state when the panel opens
+			sendBossDefeatCheckBox.Checked = toolConfig.Coop.SendBossDefeat;
 		}
 
 		private void saveButton_Click(object sender, EventArgs e)
@@ -54,6 +56,12 @@ namespace SotnRandoTools
 		private void webSocketUrlTextBox_TextChanged(object sender, EventArgs e)
 		{
 			toolConfig.Coop.WebSocketUrl = webSocketUrlTextBox.Text;
+		}
+
+		// Update the configuration whenever the user changes the checkbox state
+		private void sendBossDefeatCheckBox_CheckedChanged(object sender, EventArgs e)
+		{
+			toolConfig.Coop.SendBossDefeat = sendBossDefeatCheckBox.Checked;
 		}
 	}
 }

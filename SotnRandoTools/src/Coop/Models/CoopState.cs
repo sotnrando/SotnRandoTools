@@ -33,6 +33,7 @@ namespace SotnRandoTools.Coop.Models
 
 		public readonly ObjectState[] relics;
 		public readonly ObjectState[] shortcuts;
+		public readonly ObjectState[] bosses;
 		public LocationState[] locations;
 		public WarpsState WarpsFirstCastle;
 		public WarpsState WarpsSecondCastle;
@@ -43,6 +44,8 @@ namespace SotnRandoTools.Coop.Models
 			this.locationTracker = locationTracker ?? throw new ArgumentNullException(nameof(locationTracker));
 			relics = new ObjectState[Enum.GetValues(typeof(SotnApi.Constants.Values.Alucard.Enums.Relic)).Length];
 			shortcuts = new ObjectState[Enum.GetValues(typeof(Enums.Shortcut)).Length];
+			// ◄ Initializes boss tracking slots based on the total number of bosses in your Times enum
+			bosses = new ObjectState[Enum.GetValues(typeof(SotnApi.Constants.Values.Game.Enums.Times)).Length];
 			locations = new LocationState[1];
 		}
 
@@ -52,6 +55,22 @@ namespace SotnRandoTools.Coop.Models
 			UpdateWarps();
 			UpdateShortcuts();
 			UpdateLocations();
+			UpdateBosses();
+		}
+		private void UpdateBosses()
+		{
+			for (int i = 0; i < bosses.Length - 1; i++)
+			{
+				// Query the live game API safely
+				bool isDefeated = sotnApi.GameApi.GetTimeAttack((SotnApi.Constants.Values.Game.Enums.Times) (i + 1)) > 0;
+
+				// Keep the robust state-latch rule to only flag freshly killed bosses
+				if (isDefeated && !bosses[i].status)
+				{
+					bosses[i].updated = true;
+					bosses[i].status = true;
+				}
+			}
 		}
 
 		private void UpdateShortcuts()

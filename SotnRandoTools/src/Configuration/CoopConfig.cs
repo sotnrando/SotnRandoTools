@@ -17,5 +17,6 @@ namespace SotnRandoTools.Configuration
 		public int DefaultPort { get; set; }
 		public int Volume { get; set; }
 		public string WebSocketUrl { get; set; }
+		public bool SendBossDefeat { get; set; }
 	}
 }

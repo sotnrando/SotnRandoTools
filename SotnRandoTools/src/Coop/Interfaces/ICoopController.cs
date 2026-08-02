@@ -10,6 +10,7 @@ namespace SotnRandoTools.Coop.Interfaces
 
 		event Action<byte, ushort, ushort>? OnPlayerLocationUpdated;
 		event Action<byte, ushort, ushort>? OnPlayerHistoryUpdated;
+		event Action<int, string>? OnBossDefeated;
 
 		void Connect(string hostIp, int port);
 		void ConnectOnline(string websocketUrl, string roomId);
@@ -22,5 +23,9 @@ namespace SotnRandoTools.Coop.Interfaces
 		// --- New Internal Network Routing Handlers ---
 		void UpdatePlayerLocation(byte playerId, ushort x, ushort y);
 		void UpdatePlayerHistory(byte castleNum, ushort tileX, ushort tileY);
+		// Put this near your other Action handlers
+
+		// Put this near your method signatures
+		void InvokeBossDefeated(int bossIndex, string bossName);
 	}
 }

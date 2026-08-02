@@ -33,14 +33,15 @@ namespace SotnRandoTools
             this.divider = new System.Windows.Forms.Label();
             this.saveButton = new System.Windows.Forms.Button();
             this.optionsBox = new System.Windows.Forms.GroupBox();
+            this.sendComboBox = new System.Windows.Forms.ComboBox();
+            this.sendBindLabel = new System.Windows.Forms.Label();
             this.portLabel = new System.Windows.Forms.Label();
             this.portTextBox = new System.Windows.Forms.TextBox();
-            this.volumeBox = new System.Windows.Forms.GroupBox();
-            this.volumeBar = new System.Windows.Forms.TrackBar();
-            this.sendBindLabel = new System.Windows.Forms.Label();
-            this.sendComboBox = new System.Windows.Forms.ComboBox();
             this.webSocketUrlLabel = new System.Windows.Forms.Label();
             this.webSocketUrlTextBox = new System.Windows.Forms.TextBox();
+            this.volumeBox = new System.Windows.Forms.GroupBox();
+            this.volumeBar = new System.Windows.Forms.TrackBar();
+            this.sendBossDefeatCheckBox = new System.Windows.Forms.CheckBox();
             this.optionsBox.SuspendLayout();
             this.volumeBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.volumeBar)).BeginInit();
@@ -82,6 +83,7 @@ namespace SotnRandoTools
             // 
             // optionsBox
             // 
+            this.optionsBox.Controls.Add(this.sendBossDefeatCheckBox);
             this.optionsBox.Controls.Add(this.sendComboBox);
             this.optionsBox.Controls.Add(this.sendBindLabel);
             this.optionsBox.Controls.Add(this.portLabel);
@@ -95,6 +97,31 @@ namespace SotnRandoTools
             this.optionsBox.TabIndex = 4;
             this.optionsBox.TabStop = false;
             this.optionsBox.Text = "Options";
+            // 
+            // sendComboBox
+            // 
+            this.sendComboBox.CausesValidation = false;
+            this.sendComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.sendComboBox.FormattingEnabled = true;
+            this.sendComboBox.Items.AddRange(new object[] {
+            "Select",
+            "Triangle",
+            "L3",
+            "R3"});
+            this.sendComboBox.Location = new System.Drawing.Point(91, 64);
+            this.sendComboBox.Name = "sendComboBox";
+            this.sendComboBox.Size = new System.Drawing.Size(121, 21);
+            this.sendComboBox.TabIndex = 3;
+            this.sendComboBox.SelectedIndexChanged += new System.EventHandler(this.sendComboBox_SelectedIndexChanged);
+            // 
+            // sendBindLabel
+            // 
+            this.sendBindLabel.AutoSize = true;
+            this.sendBindLabel.Location = new System.Drawing.Point(6, 64);
+            this.sendBindLabel.Name = "sendBindLabel";
+            this.sendBindLabel.Size = new System.Drawing.Size(70, 13);
+            this.sendBindLabel.TabIndex = 2;
+            this.sendBindLabel.Text = "Send button:";
             // 
             // portLabel
             // 
@@ -112,6 +139,23 @@ namespace SotnRandoTools
             this.portTextBox.Size = new System.Drawing.Size(85, 21);
             this.portTextBox.TabIndex = 0;
             this.portTextBox.TextChanged += new System.EventHandler(this.portTextBox_TextChanged);
+            // 
+            // webSocketUrlLabel
+            // 
+            this.webSocketUrlLabel.AutoSize = true;
+            this.webSocketUrlLabel.Location = new System.Drawing.Point(6, 102);
+            this.webSocketUrlLabel.Name = "webSocketUrlLabel";
+            this.webSocketUrlLabel.Size = new System.Drawing.Size(87, 13);
+            this.webSocketUrlLabel.TabIndex = 4;
+            this.webSocketUrlLabel.Text = "WebSocket URL:";
+            // 
+            // webSocketUrlTextBox
+            // 
+            this.webSocketUrlTextBox.Location = new System.Drawing.Point(91, 99);
+            this.webSocketUrlTextBox.Name = "webSocketUrlTextBox";
+            this.webSocketUrlTextBox.Size = new System.Drawing.Size(282, 21);
+            this.webSocketUrlTextBox.TabIndex = 5;
+            this.webSocketUrlTextBox.TextChanged += new System.EventHandler(this.webSocketUrlTextBox_TextChanged);
             // 
             // volumeBox
             // 
@@ -132,47 +176,16 @@ namespace SotnRandoTools
             this.volumeBar.TabIndex = 0;
             this.volumeBar.Scroll += new System.EventHandler(this.volumeBar_Scroll);
             // 
-            // sendBindLabel
+            // sendBossDefeatCheckBox
             // 
-            this.sendBindLabel.AutoSize = true;
-            this.sendBindLabel.Location = new System.Drawing.Point(6, 64);
-            this.sendBindLabel.Name = "sendBindLabel";
-            this.sendBindLabel.Size = new System.Drawing.Size(70, 13);
-            this.sendBindLabel.TabIndex = 2;
-            this.sendBindLabel.Text = "Send button:";
-            // 
-            // sendComboBox
-            // 
-            this.sendComboBox.CausesValidation = false;
-            this.sendComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.sendComboBox.FormattingEnabled = true;
-            this.sendComboBox.Items.AddRange(new object[] {
-            "Select",
-            "Triangle",
-            "L3",
-            "R3"});
-            this.sendComboBox.Location = new System.Drawing.Point(91, 64);
-            this.sendComboBox.Name = "sendComboBox";
-            this.sendComboBox.Size = new System.Drawing.Size(121, 21);
-            this.sendComboBox.TabIndex = 3;
-            this.sendComboBox.SelectedIndexChanged += new System.EventHandler(this.sendComboBox_SelectedIndexChanged);
-            // 
-            // webSocketUrlLabel
-            // 
-            this.webSocketUrlLabel.AutoSize = true;
-            this.webSocketUrlLabel.Location = new System.Drawing.Point(6, 102);
-            this.webSocketUrlLabel.Name = "webSocketUrlLabel";
-            this.webSocketUrlLabel.Size = new System.Drawing.Size(85, 13);
-            this.webSocketUrlLabel.TabIndex = 4;
-            this.webSocketUrlLabel.Text = "WebSocket URL:";
-            // 
-            // webSocketUrlTextBox
-            // 
-            this.webSocketUrlTextBox.Location = new System.Drawing.Point(91, 99);
-            this.webSocketUrlTextBox.Name = "webSocketUrlTextBox";
-            this.webSocketUrlTextBox.Size = new System.Drawing.Size(282, 21);
-            this.webSocketUrlTextBox.TabIndex = 5;
-            this.webSocketUrlTextBox.TextChanged += new System.EventHandler(this.webSocketUrlTextBox_TextChanged);
+            this.sendBossDefeatCheckBox.AutoSize = true;
+            this.sendBossDefeatCheckBox.Location = new System.Drawing.Point(215, 26);
+            this.sendBossDefeatCheckBox.Name = "sendBossDefeatCheckBox";
+            this.sendBossDefeatCheckBox.Size = new System.Drawing.Size(111, 17);
+            this.sendBossDefeatCheckBox.TabIndex = 6;
+            this.sendBossDefeatCheckBox.Text = "Send Boss Defeat";
+            this.sendBossDefeatCheckBox.UseVisualStyleBackColor = true;
+            this.sendBossDefeatCheckBox.CheckedChanged += new System.EventHandler(this.sendBossDefeatCheckBox_CheckedChanged);
             // 
             // CoopSettingsPanel
             // 
@@ -213,5 +226,6 @@ namespace SotnRandoTools
 		private System.Windows.Forms.Label sendBindLabel;
 		private System.Windows.Forms.Label webSocketUrlLabel;
 		private System.Windows.Forms.TextBox webSocketUrlTextBox;
+		private System.Windows.Forms.CheckBox sendBossDefeatCheckBox;
 	}
 }
