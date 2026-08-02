@@ -98,6 +98,33 @@ namespace SotnRandoTools.Coop
 						notificationService.AddMessage($"Received Synch All");
 						//Console.WriteLine($"Received Synch");
 						break;
+					case MessageType.PlayerCoords:
+						{
+							// Check to make sure we have enough bytes for an ID, X, and Y coordinate
+							if (data.Length >= 6)
+							{
+								byte playerId = data[1];
+								ushort xCoord = BitConverter.ToUInt16(data, 2);
+								ushort yCoord = BitConverter.ToUInt16(data, 4);
+
+								// Forward the data to the controller so the MapForm can read it
+								coopController.UpdatePlayerLocation(playerId, xCoord, yCoord);
+							}
+						}
+						break;
+					case MessageType.RoomHistory:
+						{
+							if (data.Length >= 6)
+							{
+								byte teammateCastle = data[1]; // ◄ Extract the exact castle they are inside
+								ushort tileX = BitConverter.ToUInt16(data, 2);
+								ushort tileY = BitConverter.ToUInt16(data, 4);
+
+								// Route the data straight to the controller, including the castle parameter
+								coopController.UpdatePlayerHistory(teammateCastle, tileX, tileY);
+							}
+						}
+						break;
 					default:
 						break;
 				}

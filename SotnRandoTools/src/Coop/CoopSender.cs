@@ -22,6 +22,17 @@ namespace SotnRandoTools.Coop
 		byte[] data3 = new byte[3];
 		byte[] data5 = new byte[5];
 		byte[] data9 = new byte[9];
+		// New allocated byte array for coordinate tracking: Type(1), PlayerId(1), X(2), Y(2)
+		byte[] data6 = new byte[6];
+
+		private int mapFrameCounter = 0;
+
+		// Network throttle tracking variables
+		private DateTime lastPositionSendTime = DateTime.MinValue;
+		private const double PositionSendIntervalMs = 100; // Broadcast 10 times per second
+		private ushort lastLoggedX = 0;
+		private ushort lastLoggedY = 0;
+		private ushort lastLoggedRoom = 0;
 		private ushort[] sendButton = new ushort[4] { SotnApi.Constants.Values.Game.Controller.Select, SotnApi.Constants.Values.Game.Controller.Triangle, SotnApi.Constants.Values.Game.Controller.L3, SotnApi.Constants.Values.Game.Controller.R3 };
 
 		public CoopSender(IToolConfig toolConfig, ISotnApi sotnApi, INotificationService notificationService, ICoopController coopController)
@@ -59,6 +70,7 @@ namespace SotnRandoTools.Coop
 			SendLocations();
 			SendWarps();
 			SendShortcuts();
+			SendLocalMapTelemetry();
 
 			if (coopController.SynchRequested)
 			{
@@ -90,7 +102,60 @@ namespace SotnRandoTools.Coop
 				sendPressed = false;
 			}
 		}
+		private unsafe void SendLocalMapTelemetry()
+		{
+			// 1. Map History Synchronization: Runs exactly once every 10 frames
+			mapFrameCounter++;
+			if (mapFrameCounter >= 10)
+			{
+				mapFrameCounter = 0;
 
+				ushort currentMapX = (ushort) sotnApi.AlucardApi.MapX;
+				ushort currentMapY = (ushort) sotnApi.AlucardApi.MapY;
+
+				if (currentMapX != lastLoggedRoom || currentMapY != lastLoggedY)
+				{
+					lastLoggedRoom = currentMapX;
+
+					// FIX: Read whether the local player is in the Second Castle right now
+					byte activeCastle = (byte) (sotnApi.GameApi.SecondCastle ? 2 : 1);
+
+					fixed (byte* buffer = data6)
+					{
+						buffer[0] = (byte) MessageType.RoomHistory;
+						buffer[1] = activeCastle; // ◄ Store the specific castle state in byte 1
+
+						Array.Copy(BitConverter.GetBytes(currentMapX), 0, data6, 2, 2);
+						Array.Copy(BitConverter.GetBytes(currentMapY), 0, data6, 4, 2);
+					}
+					coopController.SendData(data6);
+				}
+			}
+
+			// 2. Continuous Real-time Live Location Blinking Circle Node Dot Tracker Streaming (100ms interval)
+			if ((DateTime.UtcNow - lastPositionSendTime).TotalMilliseconds >= PositionSendIntervalMs)
+			{
+				lastPositionSendTime = DateTime.UtcNow;
+
+				ushort currentX = (ushort) sotnApi.AlucardApi.MapX;
+				ushort currentY = (ushort) sotnApi.AlucardApi.MapY;
+
+				if (currentX != lastLoggedX || currentY != lastLoggedY)
+				{
+					lastLoggedX = currentX;
+					lastLoggedY = currentY;
+
+					fixed (byte* buffer = data6)
+					{
+						buffer[0] = (byte) MessageType.PlayerCoords;
+						buffer[1] = 0;
+						*((ushort*) (buffer + 2)) = currentX;
+						*((ushort*) (buffer + 4)) = currentY;
+					}
+					coopController.SendData(data6);
+				}
+			}
+		}
 		private unsafe void SendItem()
 		{
 			if (!sotnApi.GameApi.EquipMenuOpen() || !sotnApi.GameApi.IsInMenu() || !sendPressed)

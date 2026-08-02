@@ -14,6 +14,9 @@ namespace SotnRandoTools.Coop.Enums
 		Shortcut,
 		SynchRequest,
 		SynchAll,
-		Location
+		Location,
+		// --- New Flags Added Below ---
+		PlayerCoords, // Live X, Y map coordinates
+		RoomHistory   // List or flags of explored rooms
 	}
 }

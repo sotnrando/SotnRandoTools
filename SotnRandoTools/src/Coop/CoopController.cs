@@ -20,6 +20,10 @@ namespace SotnRandoTools.Coop
 		private ICoopTransport? transport;
 		private CoopState coopState;
 
+		// --- New Action Event Implementations for Map UI Hooking ---
+		public event Action<byte, ushort, ushort>? OnPlayerLocationUpdated;
+		public event Action<byte, ushort, ushort>? OnPlayerHistoryUpdated;
+
 		public CoopController(IToolConfig toolConfig, ISotnApi sotnApi, ICoopViewModel coopViewModel, INotificationService notificationService, ILocationTracker locationTracker)
 		{
 			this.coopViewModel = coopViewModel ?? throw new ArgumentNullException(nameof(coopViewModel));
@@ -31,10 +35,7 @@ namespace SotnRandoTools.Coop
 
 		public CoopState CoopState
 		{
-			get
-			{
-				return coopState;
-			}
+			get { return coopState; }
 		}
 
 		public bool SynchRequested { get; set; }
@@ -45,14 +46,44 @@ namespace SotnRandoTools.Coop
 			{
 				return;
 			}
+
 			if (sotnApi.GameApi.InAlucardMode())
 			{
 				coopState.Update();
 			}
+
 			coopSender.Update();
 			coopReceiver.Update();
 		}
 
+		public void UpdatePlayerLocation(byte playerId, ushort x, ushort y)
+        {
+            // Trigger the interface action if anyone else is watching
+            OnPlayerLocationUpdated?.Invoke(playerId, x, y);
+
+            // SELF-CONTAINED LOOP: Scan open system frames to find the active map display tool
+            foreach (System.Windows.Forms.Form openForm in System.Windows.Forms.Application.OpenForms)
+            {
+                if (openForm is MapForm activeMap)
+                {
+                    activeMap.HandleRemotePlayerLocation(playerId, x, y);
+                    break;
+                }
+            }
+        }
+		public void UpdatePlayerHistory(byte castleNum, ushort tileX, ushort tileY)
+		{
+			// Scan system frames to find the active map tracker
+			foreach (System.Windows.Forms.Form openForm in System.Windows.Forms.Application.OpenForms)
+			{
+				if (openForm is MapForm activeMap)
+				{
+					// Pass the verified castle index parameter down into the form layer
+					activeMap.HandleRemotePlayerHistory(castleNum, tileX, tileY);
+					break;
+				}
+			}
+		}
 		public void Connect(string hostIp, int port)
 		{
 			if (port < Globals.PortMinimum || port > Globals.PortMaximum) throw new ArgumentOutOfRangeException($"Port must be between {Globals.PortMinimum} and {Globals.PortMaximum}");
@@ -71,9 +102,7 @@ namespace SotnRandoTools.Coop
 				networking.RemoteServerPort = port;
 				coopReceiver.MessageQueue = transport.MessageQueue;
 			}
-
 			transport.Open();
-
 			return;
 		}
 
@@ -81,7 +110,6 @@ namespace SotnRandoTools.Coop
 		{
 			if (string.IsNullOrEmpty(websocketUrl)) throw new ArgumentNullException(nameof(websocketUrl));
 			if (string.IsNullOrEmpty(roomId)) throw new ArgumentNullException(nameof(roomId));
-
 			DisposeAll();
 			transport = new CoopWebSocketTransport(websocketUrl, roomId, coopViewModel);
 			coopReceiver.MessageQueue = transport.MessageQueue;
@@ -100,13 +128,11 @@ namespace SotnRandoTools.Coop
 		{
 			if (port < Globals.PortMinimum || port > Globals.PortMaximum) throw new ArgumentOutOfRangeException($"Port must be between {Globals.PortMinimum} and {Globals.PortMaximum}");
 			string hostName = Dns.GetHostName();
-
 			if (transport is null || !(transport is CoopNetworking))
 			{
 				transport = new CoopNetworking(port, coopViewModel);
 				coopReceiver.MessageQueue = transport.MessageQueue;
 			}
-
 			transport.Open();
 			return;
 		}
@@ -132,7 +158,6 @@ namespace SotnRandoTools.Coop
 		{
 			System.Diagnostics.Debug.Assert(data != null);
 			System.Diagnostics.Debug.Assert(data.Length >= 1);
-
 			if (transport is not null)
 			{
 				transport.Send(data);
