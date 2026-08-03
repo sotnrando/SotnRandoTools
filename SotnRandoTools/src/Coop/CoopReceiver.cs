@@ -353,7 +353,7 @@ namespace SotnRandoTools.Coop
 
 			// Notification
 			string bossName = ((SotnApi.Constants.Values.Game.Enums.Times) (bossIndex + 1)).ToString();
-			notificationService.AddMessage($"{bossName} Defeated! (Synced)");
+			notificationService.AddMessage($"{bossName} Defeated!");
 			notificationService.PlayAlert();
 
 			coopController.InvokeBossDefeated(bossIndex, bossName);
