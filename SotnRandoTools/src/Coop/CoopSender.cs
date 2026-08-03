@@ -1,5 +1,6 @@
 ﻿using System;
 using SotnApi.Interfaces;
+using SotnApi.Constants.Addresses;
 using SotnRandoTools.Configuration.Interfaces;
 using SotnRandoTools.Coop.Enums;
 using SotnRandoTools.Coop.Interfaces;
@@ -22,23 +23,27 @@ namespace SotnRandoTools.Coop
 		byte[] data3 = new byte[3];
 		byte[] data5 = new byte[5];
 		byte[] data9 = new byte[9];
-		// New allocated byte array for coordinate tracking: Type(1), PlayerId(1), X(2), Y(2)
 		byte[] data6 = new byte[6];
 
 		private int mapFrameCounter = 0;
 
-		// Network throttle tracking variables
 		private DateTime lastPositionSendTime = DateTime.MinValue;
-		private const double PositionSendIntervalMs = 100; // Broadcast 10 times per second
+		private const double PositionSendIntervalMs = 100;
 		private ushort lastLoggedX = 0;
 		private ushort lastLoggedY = 0;
 		private ushort lastLoggedRoom = 0;
-		private ushort[] sendButton = new ushort[4] { SotnApi.Constants.Values.Game.Controller.Select, SotnApi.Constants.Values.Game.Controller.Triangle, SotnApi.Constants.Values.Game.Controller.L3, SotnApi.Constants.Values.Game.Controller.R3 };
+		private ushort[] sendButton = new ushort[4]
+		{
+			SotnApi.Constants.Values.Game.Controller.Select,
+			SotnApi.Constants.Values.Game.Controller.Triangle,
+			SotnApi.Constants.Values.Game.Controller.L3,
+			SotnApi.Constants.Values.Game.Controller.R3
+		};
 
 		public CoopSender(IToolConfig toolConfig, ISotnApi sotnApi, INotificationService notificationService, ICoopController coopController)
 		{
 			this.toolConfig = toolConfig ?? throw new ArgumentNullException(nameof(toolConfig));
-			this.sotnApi = sotnApi ?? throw new ArgumentNullException(nameof(sotnApi)); ;
+			this.sotnApi = sotnApi ?? throw new ArgumentNullException(nameof(sotnApi));
 			this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
 			this.coopController = coopController ?? throw new ArgumentNullException(nameof(coopController));
 		}
@@ -106,9 +111,9 @@ namespace SotnRandoTools.Coop
 				sendPressed = false;
 			}
 		}
+
 		private unsafe void SendLocalMapTelemetry()
 		{
-			// 1. Map History Synchronization: Runs exactly once every 10 frames
 			mapFrameCounter++;
 			if (mapFrameCounter >= 10)
 			{
@@ -120,22 +125,21 @@ namespace SotnRandoTools.Coop
 				if (currentMapX != lastLoggedRoom || currentMapY != lastLoggedY)
 				{
 					lastLoggedRoom = currentMapX;
+					lastLoggedY = currentMapY;
 
 					byte activeCastle = (byte) (sotnApi.GameApi.SecondCastle ? 2 : 1);
 
 					fixed (byte* buffer = data6)
 					{
 						buffer[0] = (byte) MessageType.RoomHistory;
-						buffer[1] = activeCastle; // ◄ Store the specific castle state in byte 1
-
-						Array.Copy(BitConverter.GetBytes(currentMapX), 0, data6, 2, 2);
-						Array.Copy(BitConverter.GetBytes(currentMapY), 0, data6, 4, 2);
+						buffer[1] = activeCastle;
+						*((ushort*) (buffer + 2)) = currentMapX;
+						*((ushort*) (buffer + 4)) = currentMapY;
 					}
 					coopController.SendData(data6);
 				}
 			}
 
-			// 2. Continuous Real-time Live Location Blinking Circle Node Dot Tracker Streaming (100ms interval)
 			if ((DateTime.UtcNow - lastPositionSendTime).TotalMilliseconds >= PositionSendIntervalMs)
 			{
 				lastPositionSendTime = DateTime.UtcNow;
@@ -159,6 +163,7 @@ namespace SotnRandoTools.Coop
 				}
 			}
 		}
+
 		private unsafe void SendItem()
 		{
 			if (!sotnApi.GameApi.EquipMenuOpen() || !sotnApi.GameApi.IsInMenu() || !sendPressed)
@@ -166,7 +171,6 @@ namespace SotnRandoTools.Coop
 				return;
 			}
 
-			sendPressed = true;
 			short item = (short) sotnApi.AlucardApi.GetSelectedItem();
 			if (item == -1 || !sotnApi.AlucardApi.HasItemInInventory(item))
 			{
@@ -190,6 +194,7 @@ namespace SotnRandoTools.Coop
 					data2[0] = (byte) MessageType.Relic;
 					data2[1] = (byte) i;
 					coopController.SendData(data2);
+					coopController.CoopState.relics[i].updated = false;
 				}
 			}
 		}
@@ -209,6 +214,7 @@ namespace SotnRandoTools.Coop
 						*((ushort*) (buffer + 3)) = locationIndex;
 					}
 					coopController.SendData(data5);
+					coopController.CoopState.locations[i].updated = false;
 				}
 			}
 		}
@@ -220,14 +226,14 @@ namespace SotnRandoTools.Coop
 				data2[0] = (byte) MessageType.WarpFirstCastle;
 				data2[1] = coopController.CoopState.WarpsFirstCastle.difference;
 				coopController.SendData(data2);
-				//Console.WriteLine($"Sending first castle warp {coopController.CoopState.WarpsFirstCastle.difference}.");
+				coopController.CoopState.WarpsFirstCastle.updated = false;
 			}
 			if (coopController.CoopState.WarpsSecondCastle.updated)
 			{
 				data2[0] = (byte) MessageType.WarpSecondCastle;
 				data2[1] = coopController.CoopState.WarpsSecondCastle.difference;
 				coopController.SendData(data2);
-				//Console.WriteLine($"Sending first castle warp {coopController.CoopState.WarpsSecondCastle.difference}.");
+				coopController.CoopState.WarpsSecondCastle.updated = false;
 			}
 		}
 
@@ -240,6 +246,7 @@ namespace SotnRandoTools.Coop
 					data2[0] = (byte) MessageType.Shortcut;
 					data2[1] = (byte) i;
 					coopController.SendData(data2);
+					coopController.CoopState.shortcuts[i].updated = false;
 				}
 			}
 		}
@@ -273,7 +280,7 @@ namespace SotnRandoTools.Coop
 			{
 				if (coopController.CoopState.shortcuts[i].status)
 				{
-					shortcuts |= (ushort) Math.Pow(2, i);
+					shortcuts |= (ushort) (1 << i);
 				}
 			}
 
@@ -282,7 +289,7 @@ namespace SotnRandoTools.Coop
 			{
 				if (coopController.CoopState.relics[i].status)
 				{
-					relicsNumber |= (int) Math.Pow(2, i);
+					relicsNumber |= (1 << i);
 				}
 			}
 
@@ -291,7 +298,7 @@ namespace SotnRandoTools.Coop
 			{
 				if (coopController.CoopState.bosses[i].status)
 				{
-					bossesNumber |= (int) Math.Pow(2, i);
+					bossesNumber |= (1 << i);
 				}
 			}
 
@@ -308,16 +315,28 @@ namespace SotnRandoTools.Coop
 		{
 			for (int i = 0; i < coopController.CoopState.bosses.Length; i++)
 			{
-				// Check if a boss state changed and is now marked as defeated
-				if (coopController.CoopState.bosses[i].updated && coopController.CoopState.bosses[i].status)
+				if (coopController.CoopState.bosses[i].updated &&
+					coopController.CoopState.bosses[i].status)
 				{
-					data2[0] = (byte) MessageType.BossDefeat;
-					data2[1] = (byte) i;
-					coopController.SendData(data2);
+					// Read the boss time attack using your API
+					uint timeAttackValue = sotnApi.GameApi.GetTimeAttack(
+						(SotnApi.Constants.Values.Game.Enums.Times) (i + 1)
+					);
 
+					// Build packet: [MessageType][bossIndex][4-byte timeAttackValue]
+					byte[] packet = new byte[6];
+					packet[0] = (byte) MessageType.BossDefeat;
+					packet[1] = (byte) i;
+					Array.Copy(BitConverter.GetBytes(timeAttackValue), 0, packet, 2, 4);
+
+					// Send to teammate
+					coopController.SendData(packet);
+
+					// Clear updated flag so we don't resend
 					coopController.CoopState.bosses[i].updated = false;
 				}
 			}
 		}
+
 	}
 }

@@ -4,6 +4,7 @@ using SotnApi.Constants.Values.Alucard;
 using SotnApi.Constants.Values.Alucard.Enums;
 using SotnApi.Constants.Values.Game;
 using SotnApi.Interfaces;
+using SotnApi.Constants.Addresses;
 using SotnRandoTools.Configuration.Interfaces;
 using SotnRandoTools.Coop.Enums;
 using SotnRandoTools.Coop.Interfaces;
@@ -49,33 +50,29 @@ namespace SotnRandoTools.Coop
 						{
 							sotnApi.AlucardApi.GrantRelic((Relic) indexByte);
 							coopController.CoopState.relics[indexByte].status = true;
-							notificationService.AddMessage(SotnApi.Constants.Values.Alucard.Equipment.Relics[indexByte]);
+							notificationService.AddMessage(Equipment.Relics[indexByte]);
 							notificationService.PlayAlert();
 						}
 						break;
-					case MessageType.Location:						
+					case MessageType.Location:
 						sotnApi.GameApi.SetRoomToVisited(SotnApi.Constants.Addresses.Game.MapStart + index);
 						coopController.CoopState.locations[index2].status = true;
 						sotnApi.AlucardApi.Rooms++;
-						//Console.WriteLine($"Received location: {index}");
 						break;
 					case MessageType.Item:
 						sotnApi.AlucardApi.GrantItemByName(Equipment.Items[index]);
 						notificationService.AddMessage(Equipment.Items[index]);
 						notificationService.PlayAlert();
-						//Console.WriteLine($"Received item: {Equipment.Items[index]}");
 						break;
 					case MessageType.WarpFirstCastle:
 						sotnApi.AlucardApi.WarpsFirstCastle |= indexByte;
 						coopController.CoopState.WarpsFirstCastle.value = (byte) sotnApi.AlucardApi.WarpsFirstCastle;
 						notificationService.AddMessage($"Received warp: {(Warp) indexByte}");
-						//Console.WriteLine($"Received warp: {(Warp) indexByte}");
 						break;
 					case MessageType.WarpSecondCastle:
 						sotnApi.AlucardApi.WarpsSecondCastle |= indexByte;
 						coopController.CoopState.WarpsSecondCastle.value = (byte) sotnApi.AlucardApi.WarpsSecondCastle;
 						notificationService.AddMessage($"Received warp: Inverted {(Warp) indexByte}");
-						//Console.WriteLine($"Received warp: Inverted {(Warp) indexByte}");
 						break;
 					case MessageType.Shortcut:
 						if (index > Enum.GetNames(typeof(Shortcut)).Length - 1)
@@ -90,24 +87,20 @@ namespace SotnRandoTools.Coop
 						break;
 					case MessageType.SynchRequest:
 						coopController.SynchRequested = true;
-						notificationService.AddMessage($"Received Synch Request");
-						//Console.WriteLine($"Sending Synch");
+						notificationService.AddMessage("Received Synch Request");
 						break;
 					case MessageType.SynchAll:
 						DecodeSynch(data);
-						notificationService.AddMessage($"Received Synch All");
-						//Console.WriteLine($"Received Synch");
+						notificationService.AddMessage("Received Synch All");
 						break;
 					case MessageType.PlayerCoords:
 						{
-							// Check to make sure we have enough bytes for an ID, X, and Y coordinate
 							if (data.Length >= 6)
 							{
 								byte playerId = data[1];
 								ushort xCoord = BitConverter.ToUInt16(data, 2);
 								ushort yCoord = BitConverter.ToUInt16(data, 4);
 
-								// Forward the data to the controller so the MapForm can read it
 								coopController.UpdatePlayerLocation(playerId, xCoord, yCoord);
 							}
 						}
@@ -116,11 +109,10 @@ namespace SotnRandoTools.Coop
 						{
 							if (data.Length >= 6)
 							{
-								byte teammateCastle = data[1]; // ◄ Extract the exact castle they are inside
+								byte teammateCastle = data[1];
 								ushort tileX = BitConverter.ToUInt16(data, 2);
 								ushort tileY = BitConverter.ToUInt16(data, 4);
 
-								// Route the data straight to the controller, including the castle parameter
 								coopController.UpdatePlayerHistory(teammateCastle, tileX, tileY);
 							}
 						}
@@ -132,17 +124,19 @@ namespace SotnRandoTools.Coop
 						break;
 				}
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return;
-			}			
-			
+			}
 		}
 
 		public void Update()
 		{
-			//avoid marble gallery softlock
-			bool insideMarbleGalleryDoorRooms = (sotnApi.GameApi.Room == Various.MarbleGalleryDoorToCavernsRoom || sotnApi.GameApi.Room == Various.MarbleGalleryBlueDoorRoom) && (sotnApi.GameApi.Area == Various.MarbleGalleryArea);
+			bool insideMarbleGalleryDoorRooms =
+				(sotnApi.GameApi.Room == Various.MarbleGalleryDoorToCavernsRoom ||
+				 sotnApi.GameApi.Room == Various.MarbleGalleryBlueDoorRoom) &&
+				(sotnApi.GameApi.Area == Various.MarbleGalleryArea);
+
 			if (!sotnApi.GameApi.InAlucardMode() || insideMarbleGalleryDoorRooms)
 			{
 				return;
@@ -203,11 +197,9 @@ namespace SotnRandoTools.Coop
 					sotnApi.AlucardApi.KeepStairs = true;
 					break;
 				default:
-					//Console.WriteLine($"Shortcut {shortcut} not found!");
 					return;
 			}
 			notificationService.AddMessage(Constants.CoOp.ShortcutNames[(int) shortcut]);
-			//Console.WriteLine($"Received shortcut: {shortcut}");
 		}
 
 		private void DecodeShortcuts(int flags)
@@ -216,93 +208,79 @@ namespace SotnRandoTools.Coop
 			{
 				sotnApi.AlucardApi.OuterWallElevator = true;
 				coopController.CoopState.shortcuts[0].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.OuterWallElevator}");
 			}
 			if ((flags & (int) ShortcutFlags.AlchemyElevator) == (int) ShortcutFlags.AlchemyElevator)
 			{
 				sotnApi.AlucardApi.AlchemyElevator = true;
 				coopController.CoopState.shortcuts[1].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.AlchemyElevator}");
 			}
 			if ((flags & (int) ShortcutFlags.EntranceToMarble) == (int) ShortcutFlags.EntranceToMarble)
 			{
 				sotnApi.AlucardApi.EntranceToMarble = true;
 				coopController.CoopState.shortcuts[2].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.EntranceToMarble}");
 			}
 			if ((flags & (int) ShortcutFlags.ChapelStatue) == (int) ShortcutFlags.ChapelStatue)
 			{
 				sotnApi.AlucardApi.ChapelStatue = true;
 				coopController.CoopState.shortcuts[3].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.ChapelStatue}");
 			}
 			if ((flags & (int) ShortcutFlags.ColosseumElevator) == (int) ShortcutFlags.ColosseumElevator)
 			{
 				sotnApi.AlucardApi.ColosseumElevator = true;
 				coopController.CoopState.shortcuts[4].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.ColosseumElevator}");
 			}
 			if ((flags & (int) ShortcutFlags.ColosseumToChapel) == (int) ShortcutFlags.ColosseumToChapel)
 			{
 				sotnApi.AlucardApi.ColosseumToChapel = true;
 				coopController.CoopState.shortcuts[5].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.ColosseumToChapel}");
 			}
 			if ((flags & (int) ShortcutFlags.MarbleBlueDoor) == (int) ShortcutFlags.MarbleBlueDoor)
 			{
 				sotnApi.AlucardApi.MarbleBlueDoor = true;
 				coopController.CoopState.shortcuts[6].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.MarbleBlueDoor}");
 			}
 			if ((flags & (int) ShortcutFlags.CavernsSwitchAndBridge) == (int) ShortcutFlags.CavernsSwitchAndBridge)
 			{
 				sotnApi.AlucardApi.CavernsSwitchAndBridge = true;
 				coopController.CoopState.shortcuts[7].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.CavernsSwitchAndBridge}");
 			}
 			if ((flags & (int) ShortcutFlags.EntranceToCaverns) == (int) ShortcutFlags.EntranceToCaverns)
 			{
 				sotnApi.AlucardApi.EntranceToCaverns = true;
 				coopController.CoopState.shortcuts[8].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.EntranceToCaverns}");
 			}
 			if ((flags & (int) ShortcutFlags.EntranceWarp) == (int) ShortcutFlags.EntranceWarp)
 			{
 				sotnApi.AlucardApi.EntranceWarp = true;
 				coopController.CoopState.shortcuts[9].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.EntranceWarp}");
 			}
 			if ((flags & (int) ShortcutFlags.FirstClockRoomDoor) == (int) ShortcutFlags.FirstClockRoomDoor)
 			{
 				sotnApi.AlucardApi.FirstClockRoomDoor = true;
 				coopController.CoopState.shortcuts[10].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.FirstClockRoomDoor}");
 			}
 			if ((flags & (int) ShortcutFlags.SecondClockRoomDoor) == (int) ShortcutFlags.SecondClockRoomDoor)
 			{
 				sotnApi.AlucardApi.SecondClockRoomDoor = true;
 				coopController.CoopState.shortcuts[11].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.SecondClockRoomDoor}");
 			}
 			if ((flags & (int) ShortcutFlags.FirstDemonButton) == (int) ShortcutFlags.FirstDemonButton)
 			{
 				sotnApi.AlucardApi.FirstDemonButton = true;
 				coopController.CoopState.shortcuts[12].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.FirstDemonButton}");
 			}
 			if ((flags & (int) ShortcutFlags.SecondDemonButton) == (int) ShortcutFlags.SecondDemonButton)
 			{
 				sotnApi.AlucardApi.SecondDemonButton = true;
 				coopController.CoopState.shortcuts[13].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.SecondDemonButton}");
 			}
 			if ((flags & (int) ShortcutFlags.KeepStairs) == (int) ShortcutFlags.KeepStairs)
 			{
 				sotnApi.AlucardApi.KeepStairs = true;
 				coopController.CoopState.shortcuts[14].status = true;
-				//Console.WriteLine($"Received shortcut: {ShortcutFlags.KeepStairs}");
 			}
 		}
+
 		private void DecodeSynch(byte[] data)
 		{
 			sotnApi.AlucardApi.WarpsFirstCastle |= data[1];
@@ -317,7 +295,7 @@ namespace SotnRandoTools.Coop
 			int relicCount = Enum.GetValues(typeof(Relic)).Length;
 			for (int i = 0; i < relicCount; i++)
 			{
-				int flag = (int) Math.Pow(2, i);
+				int flag = (1 << i);
 				if ((encodedRelics & flag) == flag)
 				{
 					sotnApi.AlucardApi.GrantRelic((Relic) i);
@@ -334,20 +312,18 @@ namespace SotnRandoTools.Coop
 				if (memApiProperty is not null)
 				{
 					var memApiInstance = memApiProperty.GetValue(sotnApi);
-
 					var writeU32Method = memApiInstance?.GetType().GetMethod("WriteU32", new Type[] { typeof(long), typeof(uint) });
 
 					if (writeU32Method != null)
 					{
 						for (int i = 0; i < bossCount - 1; i++)
 						{
-							int flag = (int) Math.Pow(2, i);
+							int flag = (1 << i);
 							if ((encodedBosses & flag) == flag)
 							{
 								coopController.CoopState.bosses[i].status = true;
 
-								long bossTimeAttackAddress = SotnApi.Constants.Addresses.TimeAttack.Times[i];
-
+								long bossTimeAttackAddress = TimeAttack.Times[i];
 								writeU32Method.Invoke(memApiInstance, new object[] { bossTimeAttackAddress, (uint) 1 });
 							}
 						}
@@ -359,32 +335,29 @@ namespace SotnRandoTools.Coop
 		{
 			int bossIndex = data[1];
 
-			if (bossIndex >= 0 && bossIndex < coopController.CoopState.bosses.Length - 1)
-			{
-				coopController.CoopState.bosses[bossIndex].status = true;
-				coopController.CoopState.bosses[bossIndex].updated = false;
+			if (bossIndex < 0 || bossIndex >= coopController.CoopState.bosses.Length)
+				return;
 
-				long bossTimeAttackAddress = SotnApi.Constants.Addresses.TimeAttack.Times[bossIndex];
+			// Extract the 4-byte Time Attack value sent by the killer
+			uint timeAttackValue = BitConverter.ToUInt32(data, 2);
 
-				var memApiProperty = sotnApi.GetType().GetProperty("MemAPI");
-				if (memApiProperty is not null)
-				{
-					var memApiInstance = memApiProperty.GetValue(sotnApi);
+			// Update coop state
+			coopController.CoopState.bosses[bossIndex].status = true;
+			coopController.CoopState.bosses[bossIndex].updated = false;
 
-					var writeU32Method = memApiInstance?.GetType().GetMethod("WriteU32", new Type[] { typeof(long), typeof(uint) });
+			// Write the killer's exact time attack value using your new API function
+			sotnApi.GameApi.SetTimeAttack(
+				(SotnApi.Constants.Values.Game.Enums.Times) (bossIndex + 1),
+				timeAttackValue
+			);
 
-					if (writeU32Method != null)
-					{
-						writeU32Method.Invoke(memApiInstance, new object[] { bossTimeAttackAddress, (uint) 1 });
-					}
-				}
+			// Notification
+			string bossName = ((SotnApi.Constants.Values.Game.Enums.Times) (bossIndex + 1)).ToString();
+			notificationService.AddMessage($"{bossName} Defeated! (Synced)");
+			notificationService.PlayAlert();
 
-				string bossName = ((SotnApi.Constants.Values.Game.Enums.Times) (bossIndex + 1)).ToString();
-				notificationService.AddMessage($"{bossName} Defeated!");
-				notificationService.PlayAlert();
-
-				coopController.InvokeBossDefeated(bossIndex, bossName);
-			}
+			coopController.InvokeBossDefeated(bossIndex, bossName);
 		}
+
 	}
 }
