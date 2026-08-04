@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using SotnApi.Constants.Addresses;
 using SotnApi.Constants.Values.Alucard;
 using SotnApi.Constants.Values.Alucard.Enums;
 using SotnApi.Constants.Values.Game;
 using SotnApi.Interfaces;
-using SotnApi.Constants.Addresses;
 using SotnRandoTools.Configuration.Interfaces;
 using SotnRandoTools.Coop.Enums;
 using SotnRandoTools.Coop.Interfaces;
@@ -285,6 +286,7 @@ namespace SotnRandoTools.Coop
 		{
 			sotnApi.AlucardApi.WarpsFirstCastle |= data[1];
 			coopController.CoopState.WarpsFirstCastle.value = (byte) sotnApi.AlucardApi.WarpsFirstCastle;
+
 			sotnApi.AlucardApi.WarpsSecondCastle |= data[2];
 			coopController.CoopState.WarpsSecondCastle.value = (byte) sotnApi.AlucardApi.WarpsSecondCastle;
 
@@ -293,6 +295,7 @@ namespace SotnRandoTools.Coop
 
 			int encodedRelics = BitConverter.ToInt32(data, 5);
 			int relicCount = Enum.GetValues(typeof(Relic)).Length;
+
 			for (int i = 0; i < relicCount; i++)
 			{
 				int flag = (1 << i);
@@ -303,34 +306,38 @@ namespace SotnRandoTools.Coop
 				}
 			}
 
-			if (data.Length >= 13)
+			int encodedBosses = BitConverter.ToInt32(data, 9);
+			int bossCount = coopController.CoopState.bosses.Length - 1;
+
+			int offset = 13;
+
+			for (int i = 0; i < bossCount; i++)
 			{
-				int encodedBosses = BitConverter.ToInt32(data, 9);
-				int bossCount = coopController.CoopState.bosses.Length;
+				uint incomingTime = BitConverter.ToUInt32(data, offset);
+				offset += 4;
 
-				var memApiProperty = sotnApi.GetType().GetProperty("MemAPI");
-				if (memApiProperty is not null)
+				bool senderHasBoss = (encodedBosses & (1 << i)) != 0;
+
+				if (senderHasBoss)
 				{
-					var memApiInstance = memApiProperty.GetValue(sotnApi);
-					var writeU32Method = memApiInstance?.GetType().GetMethod("WriteU32", new Type[] { typeof(long), typeof(uint) });
+					// If our time attack is 0, apply the sender's value
+					uint localTime = sotnApi.GameApi.GetTimeAttack(
+						(SotnApi.Constants.Values.Game.Enums.Times) (i + 1)
+					);
 
-					if (writeU32Method != null)
+					if (localTime == 0 && incomingTime > 0)
 					{
-						for (int i = 0; i < bossCount - 1; i++)
-						{
-							int flag = (1 << i);
-							if ((encodedBosses & flag) == flag)
-							{
-								coopController.CoopState.bosses[i].status = true;
+						sotnApi.GameApi.SetTimeAttack(
+							(SotnApi.Constants.Values.Game.Enums.Times) (i + 1),
+							incomingTime
+						);
 
-								long bossTimeAttackAddress = TimeAttack.Times[i];
-								writeU32Method.Invoke(memApiInstance, new object[] { bossTimeAttackAddress, (uint) 1 });
-							}
-						}
+						coopController.CoopState.bosses[i].status = true;
 					}
 				}
 			}
 		}
+
 		private void HandleBossDefeat(byte[] data)
 		{
 			int bossIndex = data[1];
@@ -341,11 +348,33 @@ namespace SotnRandoTools.Coop
 			// Extract the 4-byte Time Attack value sent by the killer
 			uint timeAttackValue = BitConverter.ToUInt32(data, 2);
 
-			// Update coop state
+			// Mark teammate boss state as cleared
+			coopController.CoopState.teammateBosses[bossIndex].status = true;
+
+			// If YOU already have this boss cleared but THEY didn't before this packet,
+			// resend your boss clear back to them.
+			bool iHaveBoss = coopController.CoopState.bosses[bossIndex].status;
+			bool theyHadBossBefore = coopController.CoopState.teammateBosses[bossIndex].updated == false
+									 && coopController.CoopState.teammateBosses[bossIndex].status == false;
+
+			if (iHaveBoss && theyHadBossBefore)
+			{
+				uint myTimeAttack = sotnApi.GameApi.GetTimeAttack(
+					(SotnApi.Constants.Values.Game.Enums.Times) (bossIndex + 1)
+				);
+
+				byte[] resendPacket = new byte[6];
+				resendPacket[0] = (byte) MessageType.BossDefeat;
+				resendPacket[1] = (byte) bossIndex;
+				Array.Copy(BitConverter.GetBytes(myTimeAttack), 0, resendPacket, 2, 4);
+
+				coopController.SendData(resendPacket);
+				notificationService.AddMessage($"Resent boss {bossIndex + 1} to teammate");
+			}
+
 			coopController.CoopState.bosses[bossIndex].status = true;
 			coopController.CoopState.bosses[bossIndex].updated = false;
 
-			// Write the killer's exact time attack value using your new API function
 			sotnApi.GameApi.SetTimeAttack(
 				(SotnApi.Constants.Values.Game.Enums.Times) (bossIndex + 1),
 				timeAttackValue

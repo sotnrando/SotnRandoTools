@@ -34,6 +34,7 @@ namespace SotnRandoTools.Coop.Models
 		public readonly ObjectState[] relics;
 		public readonly ObjectState[] shortcuts;
 		public readonly ObjectState[] bosses;
+		public readonly ObjectState[] teammateBosses; // ◄ NEW
 		public LocationState[] locations;
 		public WarpsState WarpsFirstCastle;
 		public WarpsState WarpsSecondCastle;
@@ -42,12 +43,19 @@ namespace SotnRandoTools.Coop.Models
 		{
 			this.sotnApi = sotnApi ?? throw new ArgumentNullException(nameof(sotnApi));
 			this.locationTracker = locationTracker ?? throw new ArgumentNullException(nameof(locationTracker));
+
 			relics = new ObjectState[Enum.GetValues(typeof(SotnApi.Constants.Values.Alucard.Enums.Relic)).Length];
 			shortcuts = new ObjectState[Enum.GetValues(typeof(Enums.Shortcut)).Length];
-			// ◄ Initializes boss tracking slots based on the total number of bosses in your Times enum
+
+			// Local boss tracking
 			bosses = new ObjectState[Enum.GetValues(typeof(SotnApi.Constants.Values.Game.Enums.Times)).Length];
+
+			// Teammate boss tracking (same length)
+			teammateBosses = new ObjectState[bosses.Length];
+
 			locations = new LocationState[1];
 		}
+
 
 		public void Update()
 		{

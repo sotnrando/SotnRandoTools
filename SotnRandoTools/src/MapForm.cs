@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using BizHawk.Client.Common;
@@ -19,25 +20,20 @@ using SotnRandoTools.Services;
 
 namespace SotnRandoTools
 {
-	// MapForm now inherits ToolFormBase so BizHawk can manage its lifecycle
 	public partial class MapForm : Form
 	{
-		// Dependencies injected from the main tool
 		private readonly ToolConfig _toolConfig;
 		private readonly SotnApi.Main.SotnApi _sotnApi;
 		private readonly IJoypadApi _joypad;
 		private readonly NotificationService _notificationService;
 		private int _mapUpdateCounter = 0;
 
-		// Map dimensions (fixed 64x64 tiles)
 		private const int MapWidth = 64;
 		private const int MapHeight = 64;
 
-		// Two separate maps: one for each castle
 		private readonly int[,] _recMap1 = new int[MapWidth, MapHeight];
 		private readonly int[,] _recMap2 = new int[MapWidth, MapHeight];
 
-		// Save/warp tiles separated by castle to prevent cross‑castle contamination
 		private readonly HashSet<(int x, int y)> _saveRoomTiles1 = new();
 		private readonly HashSet<(int x, int y)> _saveRoomTiles2 = new();
 		private readonly HashSet<(int x, int y)> _warpRoomTiles1 = new();
@@ -45,48 +41,43 @@ namespace SotnRandoTools
 		private readonly Dictionary<(int x, int y), string> _locationNames1 = new();
 		private readonly Dictionary<(int x, int y), string> _locationNames2 = new();
 
-		// New cross-network companion data structures
 		private readonly ConcurrentDictionary<byte, (int x, int y, int castle)> _remotePlayerLocations = new();
 		private readonly ConcurrentDictionary<byte, HashSet<(int x, int y)>> _remoteExploredMap1 = new();
 		private readonly ConcurrentDictionary<byte, HashSet<(int x, int y)>> _remoteExploredMap2 = new();
 
-		// Map scale (5px or 10px tiles)
 		private int _mapSize = 2;
-
-		// Current castle (1 = normal, 2 = inverted)
 		private int _curCastle = 1;
 
-		// Last tile visited (for pink cursor)
 		private int _previousX = -10;
 		private int _previousY = -10;
 		private int _lastTileX = -1;
 		private int _lastTileY = -1;
 
-		// Offsets for aligning the castle images
 		private int _castle1OffsetX = 0;
 		private int _castle1OffsetY = -3;
 		private int _castle2OffsetX = 0;
 		private int _castle2OffsetY = -10;
 
-		// UI elements
 		private PictureBox _pbLiveMap;
 		private Bitmap _mapBitmap;
 		private Label _lblLocationInfo;
 		private Label _lblCheckCounter;
 
-		// Tile types
 		private const int TileTrail = 1;
 		private const int TileCheck = 2;
 		private const int TileSave = 3;
 		private const int TileWarp = 4;
 
-		// Extension name (Classic, Guarded, etc.)
 		private string _currentExtension = "Unknown";
-
-		// Prevents updates after closing
 		private bool _isClosing = false;
+
 		private HashSet<(int x, int y)> _checkTiles1 = new();
 		private HashSet<(int x, int y)> _checkTiles2 = new();
+
+		internal int[,] RecMap1 => _recMap1;
+		internal int[,] RecMap2 => _recMap2;
+
+		private bool _viewOtherCastle = false;
 
 		internal MapForm(
 			ToolConfig toolConfig,
@@ -95,19 +86,17 @@ namespace SotnRandoTools
 			NotificationService notificationService,
 			RandoTracker.Tracker? tracker)
 		{
-			// Designer initialization
 			InitializeComponent();
+			this.TopMost = true;
 
-			// Store dependencies
 			_toolConfig = toolConfig;
 			_sotnApi = sotnApi;
 			_joypad = joypad;
 			_notificationService = notificationService;
 
-			// Detect extension from RAM/preset
 			_currentExtension = DetectExtensionFromGame();
 
-			// Build top info panel
+			
 			var infoPanel = new Panel
 			{
 				Dock = DockStyle.Top,
@@ -115,10 +104,10 @@ namespace SotnRandoTools
 				BackColor = Color.Black
 			};
 
-			// Location label (shows tile + pixel coords)
 			_lblLocationInfo = new Label
 			{
-				Dock = DockStyle.Fill,
+				Dock = DockStyle.Left,
+				Width = 240,
 				ForeColor = Color.White,
 				BackColor = Color.Transparent,
 				Text = "Location: ---",
@@ -139,6 +128,36 @@ namespace SotnRandoTools
 			};
 			infoPanel.Controls.Add(_lblCheckCounter);
 
+			var btnViewOtherCastle = new Button
+			{
+				Text = "View Other Castle",
+				ForeColor = Color.White,
+				BackColor = Color.Black,
+				FlatStyle = FlatStyle.Flat,
+				AutoSize = true,
+				AutoSizeMode = AutoSizeMode.GrowAndShrink,
+				Padding = new Padding(6, 2, 6, 2)
+			};
+			btnViewOtherCastle.FlatAppearance.BorderColor = Color.White;
+
+			btnViewOtherCastle.Click += (s, e) =>
+			{
+				_viewOtherCastle = !_viewOtherCastle;
+				DrawCastleProgress();
+			};
+
+			infoPanel.Controls.Add(btnViewOtherCastle);
+
+			// Center the button dynamically
+			infoPanel.Resize += (s, e) =>
+			{
+				btnViewOtherCastle.Location = new Point(
+					(infoPanel.Width / 2) - (btnViewOtherCastle.Width / 2),
+					(infoPanel.Height - btnViewOtherCastle.Height) / 2
+				);
+			};
+
+			// Context menu for location label
 			var menu = new ContextMenuStrip();
 			menu.Items.Add("Copy", null, (s, e) =>
 			{
@@ -146,7 +165,7 @@ namespace SotnRandoTools
 			});
 			_lblLocationInfo.ContextMenuStrip = menu;
 
-			// PictureBox that displays the map bitmap
+			// Map display
 			_pbLiveMap = new PictureBox
 			{
 				Dock = DockStyle.Fill,
@@ -157,38 +176,32 @@ namespace SotnRandoTools
 			Controls.Add(_pbLiveMap);
 			Controls.Add(infoPanel);
 
-			// Create the bitmap that the map is drawn onto
 			_mapBitmap = new Bitmap(640, 510);
 			_pbLiveMap.Image = _mapBitmap;
 
-			// Window size
 			ClientSize = new Size(600, 478);
 
-			// Load checks, draw castle, draw map
 			LoadChecks();
 			ChangeCastle();
 			DrawCastleProgress();
+		}
 
-		}// Detects castle transitions + extension changes
 		private void UpdateCastleState()
 		{
 			var character = _sotnApi.GameApi.CurrentCharacter;
 			bool inverted = _sotnApi.GameApi.SecondCastle;
 
-			// Only track Alucard
 			if (character != Character.Alucard)
 				return;
 
 			int newCastle = inverted ? 2 : 1;
 
-			// If castle changed, redraw everything
 			if (newCastle != _curCastle)
 			{
 				_curCastle = newCastle;
 				ChangeCastle();
 			}
 
-			// Detect extension changes (Classic, Guarded, etc.)
 			string newExt = DetectExtensionFromGame();
 			if (newExt != _currentExtension)
 			{
@@ -197,26 +210,18 @@ namespace SotnRandoTools
 			}
 		}
 
-		// Main update loop called every frame
 		public void UpdateMapTracker()
 		{
-			if (_isClosing)
-				return;
-			if (_sotnApi == null)
+			if (_isClosing || _sotnApi == null)
 				return;
 
-			// Only track movement when Alucard is active and has a hitbox
 			if (!_sotnApi.GameApi.InAlucardMode() || !_sotnApi.AlucardApi.HasHitbox())
 				return;
 
-			// Prevent intro hallway trail
 			int rooms = (int) _sotnApi.AlucardApi.Rooms;
 			if (rooms <= 0)
 				return;
 
-			uint action = _sotnApi.AlucardApi.Action;
-
-			// UPDATE ONLY EVERY 10 FRAMES
 			_mapUpdateCounter++;
 			if (_mapUpdateCounter < 10)
 				return;
@@ -224,7 +229,6 @@ namespace SotnRandoTools
 
 			UpdateCastleState();
 
-			// Extension changed mid‑run
 			string newExt = DetectExtensionFromGame();
 			if (newExt != _currentExtension)
 			{
@@ -233,19 +237,16 @@ namespace SotnRandoTools
 				DrawCastleProgress();
 			}
 
-			// Read tile coordinates from RAM
 			int castleX = (int) _sotnApi.AlucardApi.MapX;
 			int castleY = (int) _sotnApi.AlucardApi.MapY;
 			UpdateLocationText(castleX, castleY);
 
-			// If tile hasn't changed, skip
 			if (castleX == _lastTileX && castleY == _lastTileY)
 				return;
 
 			_lastTileX = castleX;
 			_lastTileY = castleY;
 
-			// Convert tile coords → pixel coords
 			int size = _mapSize == 2 ? 10 : 5;
 			int offsetX = _curCastle == 1 ? _castle1OffsetX : _castle2OffsetX;
 			int offsetY = _curCastle == 1 ? _castle1OffsetY : _castle2OffsetY;
@@ -255,7 +256,6 @@ namespace SotnRandoTools
 			DrawTrail(drawX, drawY);
 		}
 
-		// Marks the current tile as trail/save/warp
 		private void DrawTrail(int drawX, int drawY)
 		{
 			int size = _mapSize == 2 ? 10 : 5;
@@ -281,12 +281,14 @@ namespace SotnRandoTools
 			{
 				bool wasCheck = (_curCastle == 1 && _checkTiles1.Contains((tileX, tileY))) ||
 								(_curCastle == 2 && _checkTiles2.Contains((tileX, tileY)));
+
 				if (wasCheck)
 				{
 					if (_curCastle == 1) _checkTiles1.Remove((tileX, tileY));
 					else _checkTiles2.Remove((tileX, tileY));
 					UpdateCheckCounter();
 				}
+
 				recMap[tileX, tileY] = TileTrail;
 			}
 
@@ -295,7 +297,6 @@ namespace SotnRandoTools
 			DrawCastleProgress();
 		}
 
-		// Redraws the entire map bitmap including network companion layers
 		private void DrawCastleProgress()
 		{
 			if (_isClosing)
@@ -303,18 +304,43 @@ namespace SotnRandoTools
 
 			using (var g = Graphics.FromImage(_mapBitmap))
 			{
-				// Clear background
 				g.FillRectangle(Brushes.Black, new Rectangle(0, 0, 640, 510));
 
-				// Pixel‑perfect rendering configurations
 				g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
 				g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
 				g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
 
-				int[,] recMap = _curCastle == 1 ? _recMap1 : _recMap2;
+				int activeCastle = _viewOtherCastle
+					? (_curCastle == 1 ? 2 : 1)
+					: _curCastle;
+
+				int[,] recMap = activeCastle == 1 ? _recMap1 : _recMap2;
 				int size = _mapSize == 2 ? 10 : 5;
 
-				// Draw colored base map tiles
+				var currentRemoteHistoryMap =
+					activeCastle == 1 ? _remoteExploredMap1 : _remoteExploredMap2;
+
+				Color localTrailColor = Color.FromArgb(255, 0, 120, 255);
+				Color teammateTrailColor = Color.FromArgb(255, 255, 80, 0);
+
+				foreach (var playerHistory in currentRemoteHistoryMap.Values)
+				{
+					foreach (var tile in playerHistory)
+					{
+						if (tile.x < 0 || tile.x >= MapWidth ||
+							tile.y < 0 || tile.y >= MapHeight)
+							continue;
+
+						int tileDrawX = tile.x * size;
+						int tileDrawY = tile.y * size - (size * 3);
+
+						Rectangle rect = new Rectangle(tileDrawX, tileDrawY, size, size);
+
+						using (var brush = new SolidBrush(teammateTrailColor))
+							g.FillRectangle(brush, rect);
+					}
+				}
+
 				for (int x = 0; x < MapWidth; x++)
 				{
 					for (int y = 0; y < MapHeight; y++)
@@ -326,36 +352,55 @@ namespace SotnRandoTools
 						int drawY = y * size - (size * 3);
 						Rectangle rect = new Rectangle(drawX, drawY, size, size);
 
+						Color finalColor;
+
+						bool teammatePresent =
+							currentRemoteHistoryMap.Values.Any(set => set.Contains((x, y)));
+
 						switch (val)
 						{
-							case TileTrail:
-								using (var brush = new SolidBrush(Color.FromArgb(255, 0, 0, 224)))
-									g.FillRectangle(brush, rect);
-								break;
-							case TileCheck:
-								using (var brush = new SolidBrush(Color.FromArgb(255, 0, 255, 0)))
-									g.FillRectangle(brush, rect);
-								break;
 							case TileSave:
-								using (var brush = new SolidBrush(Color.Red))
-									g.FillRectangle(brush, rect);
+								finalColor = Color.Red;
 								break;
+
 							case TileWarp:
-								using (var brush = new SolidBrush(Color.Yellow))
-									g.FillRectangle(brush, rect);
+								finalColor = Color.Yellow;
 								break;
+
+							case TileTrail:
+								if (teammatePresent)
+								{
+									finalColor = Color.FromArgb(
+										(localTrailColor.R + teammateTrailColor.R) / 2,
+										(localTrailColor.G + teammateTrailColor.G) / 2,
+										(localTrailColor.B + teammateTrailColor.B) / 2
+									);
+								}
+								else
+								{
+									finalColor = localTrailColor;
+								}
+								break;
+
+							case TileCheck:
+								finalColor = Color.FromArgb(255, 0, 255, 0);
+								break;
+
+							default:
+								continue;
 						}
+
+						using (var brush = new SolidBrush(finalColor))
+							g.FillRectangle(brush, rect);
 					}
 				}
 
-				// Draw castle template images on top
-				Image castleImg = _curCastle == 1
+				Image castleImg = activeCastle == 1
 					? Properties.Resources.Castle1_Empty_TP
 					: Properties.Resources.Castle2_Empty_TP;
 
 				g.DrawImage(castleImg, new Rectangle(0, 0, 320 * _mapSize, 255 * _mapSize));
 
-				// Draw local current tile active cursor (pink)
 				if (_lastTileX >= 0 && _lastTileY >= 0)
 				{
 					int curX = _lastTileX * size;
@@ -364,62 +409,35 @@ namespace SotnRandoTools
 					g.FillRectangle(pink, new Rectangle(curX, curY, size - 1, size - 1));
 				}
 
-				// 1. Render where teammates HAVE BEEN (Red dots centered on each history tile)
-				var currentRemoteHistoryMap = _curCastle == 1 ? _remoteExploredMap1 : _remoteExploredMap2;
-
-				// Automatically size the dots depending on whether your map is zoomed in or out
-				int dotDiameter = size == 10 ? 4 : 2;
-				int centerOffset = (size - dotDiameter) / 2;
-
-				using (var teammateTrailBrush = new SolidBrush(Color.OrangeRed))
-				{
-					foreach (var playerHistory in currentRemoteHistoryMap.Values)
-					{
-						foreach (var tile in playerHistory)
-						{
-							// Calculate the base square coordinates of the map tile
-							int tileDrawX = tile.x * size;
-							int tileDrawY = tile.y * size - (size * 3);
-
-							// Add the offsets to position the dot dead-center inside the tile
-							int dotX = tileDrawX + centerOffset;
-							int dotY = tileDrawY + centerOffset;
-
-							g.FillEllipse(teammateTrailBrush, new Rectangle(dotX, dotY, dotDiameter, dotDiameter));
-						}
-					}
-				}
-				// 2. Render where teammates ARE NOW (Bright Blue coordinate tracker nodes)
 				using (var remotePlayerBrush = new SolidBrush(Color.FromArgb(255, 0, 120, 255)))
 				{
 					foreach (var pos in _remotePlayerLocations.Values)
 					{
-						// Only evaluate if the teammate is in the exact same castle as you!
-						if (pos.castle == _curCastle)
+						if (pos.castle == activeCastle)
 						{
 							int targetX = pos.x;
 							int targetY = pos.y;
 
-							if (_curCastle == 2)
-							{
-								// Apply the 7-tile upward offset used by your inverted map grid template layout
+							if (activeCastle == 2)
 								targetY -= 7;
-							}
 
-							int remoteCurX = targetX * size;
-							int remoteCurY = targetY * size - (size * 3);
-
-							// Canvas bounds protection layer
-							if (targetX >= 0 && targetX < MapWidth && targetY >= 0 && targetY < MapHeight)
+							if (targetX >= 0 && targetX < MapWidth &&
+								targetY >= 0 && targetY < MapHeight)
 							{
-								g.FillEllipse(remotePlayerBrush, new Rectangle(remoteCurX, remoteCurY, size - 1, size - 1));
+								int remoteCurX = targetX * size;
+								int remoteCurY = targetY * size - (size * 3);
+
+								g.FillEllipse(remotePlayerBrush,
+									new Rectangle(remoteCurX, remoteCurY, size - 1, size - 1));
 							}
 						}
 					}
 				}
 			}
+
 			_pbLiveMap.Refresh();
-		}// Clears and redraws the castle layout background image
+		}
+
 		private void ChangeCastle()
 		{
 			using (var g = Graphics.FromImage(_mapBitmap))
@@ -443,10 +461,8 @@ namespace SotnRandoTools
 				return;
 			}
 
-			// Determine the teammate's castle BEFORE saving it
 			int teammateCastle = (mapY > 32) ? 2 : 1;
 
-			// Save all three values to the thread-safe tracker
 			_remotePlayerLocations[playerId] = ((int) mapX, (int) mapY, teammateCastle);
 			DrawCastleProgress();
 		}
@@ -462,49 +478,51 @@ namespace SotnRandoTools
 			int finalTileX = (int) tileX;
 			int finalTileY = (int) tileY;
 
+			// Clamp castle 1
 			if (castleNum == 1)
 			{
-				// Assign to the Normal Castle teammate history collection set
-				var historySet = _remoteExploredMap1.GetOrAdd(0, _ => new HashSet<(int x, int y)>());
-				historySet.Add((finalTileX, finalTileY));
-
-				// ==========================================
-				// TEAMMATE CHECK CLEARING SYSTEM (Castle 1):
-				// ==========================================
-				// If this tile is currently tracked as an active uncollected check, clear it!
-				if (_checkTiles1.Contains((finalTileX, finalTileY)))
+				if (finalTileX >= 0 && finalTileX < MapWidth &&
+					finalTileY >= 0 && finalTileY < MapHeight)
 				{
-					_checkTiles1.Remove((finalTileX, finalTileY));
+					var historySet = _remoteExploredMap1.GetOrAdd(0, _ => new HashSet<(int x, int y)>());
+					historySet.Add((finalTileX, finalTileY));
 
-					// Mark the tile as an explored/empty trail in the underlying map grid array layout
-					// so it changes color from Green (Check) to Empty/Explored
-					_recMap1[finalTileX, finalTileY] = TileTrail;
+					if (_checkTiles1.Contains((finalTileX, finalTileY)))
+					{
+						_checkTiles1.Remove((finalTileX, finalTileY));
+						// Do NOT overwrite save/warp tiles
+						if (!_saveRoomTiles1.Contains((finalTileX, finalTileY)) &&
+							!_warpRoomTiles1.Contains((finalTileX, finalTileY)))
+						{
+							_recMap1[finalTileX, finalTileY] = TileTrail;
+						}
 
-					UpdateCheckCounter();
+						UpdateCheckCounter();
+					}
 				}
 			}
 			else
 			{
-				// Apply the 7-tile upward offset used by your inverted map layout structure
 				int adjustedTileY = finalTileY - 7;
 
-				var historySet = _remoteExploredMap2.GetOrAdd(0, _ => new HashSet<(int x, int y)>());
-				historySet.Add((finalTileX, adjustedTileY));
-
-				// ==========================================
-				// TEAMMATE CHECK CLEARING SYSTEM (Castle 2):
-				// ==========================================
-				if (_checkTiles2.Contains((finalTileX, adjustedTileY)))
+				if (finalTileX >= 0 && finalTileX < MapWidth &&
+					adjustedTileY >= 0 && adjustedTileY < MapHeight)
 				{
-					_checkTiles2.Remove((finalTileX, adjustedTileY));
-					_recMap2[finalTileX, adjustedTileY] = TileTrail;
-					UpdateCheckCounter();
+					var historySet = _remoteExploredMap2.GetOrAdd(0, _ => new HashSet<(int x, int y)>());
+					historySet.Add((finalTileX, adjustedTileY));
+
+					if (_checkTiles2.Contains((finalTileX, adjustedTileY)))
+					{
+						_checkTiles2.Remove((finalTileX, adjustedTileY));
+						_recMap2[finalTileX, adjustedTileY] = TileTrail;
+						UpdateCheckCounter();
+					}
 				}
 			}
 
-			// Redraw the canvas immediately to update map item colors and counter values
 			DrawCastleProgress();
 		}
+
 		// Loads all checks for the current game extension presets
 		private void LoadChecks()
 		{

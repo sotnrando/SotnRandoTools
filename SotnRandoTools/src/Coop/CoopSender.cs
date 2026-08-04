@@ -29,9 +29,12 @@ namespace SotnRandoTools.Coop
 
 		private DateTime lastPositionSendTime = DateTime.MinValue;
 		private const double PositionSendIntervalMs = 100;
-		private ushort lastLoggedX = 0;
-		private ushort lastLoggedY = 0;
-		private ushort lastLoggedRoom = 0;
+
+		private ushort lastHistoryX = 0;
+		private ushort lastHistoryY = 0;
+		private ushort lastPositionX = 0;
+		private ushort lastPositionY = 0;
+
 		private ushort[] sendButton = new ushort[4]
 		{
 			SotnApi.Constants.Values.Game.Controller.Select,
@@ -115,17 +118,17 @@ namespace SotnRandoTools.Coop
 		private unsafe void SendLocalMapTelemetry()
 		{
 			mapFrameCounter++;
-			if (mapFrameCounter >= 10)
+			if (mapFrameCounter >= 30)
 			{
 				mapFrameCounter = 0;
 
 				ushort currentMapX = (ushort) sotnApi.AlucardApi.MapX;
 				ushort currentMapY = (ushort) sotnApi.AlucardApi.MapY;
 
-				if (currentMapX != lastLoggedRoom || currentMapY != lastLoggedY)
+				if (currentMapX != lastHistoryX || currentMapY != lastHistoryY)
 				{
-					lastLoggedRoom = currentMapX;
-					lastLoggedY = currentMapY;
+					lastHistoryX = currentMapX;
+					lastHistoryY = currentMapY;
 
 					byte activeCastle = (byte) (sotnApi.GameApi.SecondCastle ? 2 : 1);
 
@@ -147,10 +150,10 @@ namespace SotnRandoTools.Coop
 				ushort currentX = (ushort) sotnApi.AlucardApi.MapX;
 				ushort currentY = (ushort) sotnApi.AlucardApi.MapY;
 
-				if (currentX != lastLoggedX || currentY != lastLoggedY)
+				if (currentX != lastPositionX || currentY != lastPositionY)
 				{
-					lastLoggedX = currentX;
-					lastLoggedY = currentY;
+					lastPositionX = currentX;
+					lastPositionY = currentY;
 
 					fixed (byte* buffer = data6)
 					{
@@ -294,9 +297,15 @@ namespace SotnRandoTools.Coop
 			}
 
 			int bossesNumber = 0;
-			for (int i = 0; i < coopController.CoopState.bosses.Length; i++)
+			int bossCount = coopController.CoopState.bosses.Length - 1;
+
+			for (int i = 0; i < bossCount; i++)
 			{
-				if (coopController.CoopState.bosses[i].status)
+				uint timeAttackValue = sotnApi.GameApi.GetTimeAttack(
+					(SotnApi.Constants.Values.Game.Enums.Times) (i + 1)
+				);
+
+				if (timeAttackValue > 0)
 				{
 					bossesNumber |= (1 << i);
 				}
@@ -310,7 +319,25 @@ namespace SotnRandoTools.Coop
 			}
 
 			coopController.SendData(data13);
+
+			for (int i = 0; i < bossCount; i++)
+			{
+				uint timeAttackValue = sotnApi.GameApi.GetTimeAttack(
+					(SotnApi.Constants.Values.Game.Enums.Times) (i + 1)
+				);
+
+				if (timeAttackValue > 0)
+				{
+					byte[] packet = new byte[6];
+					packet[0] = (byte) MessageType.BossDefeat;
+					packet[1] = (byte) i;
+					Array.Copy(BitConverter.GetBytes(timeAttackValue), 0, packet, 2, 4);
+
+					coopController.SendData(packet);
+				}
+			}
 		}
+
 		private void SendBosses()
 		{
 			for (int i = 0; i < coopController.CoopState.bosses.Length; i++)
@@ -318,21 +345,17 @@ namespace SotnRandoTools.Coop
 				if (coopController.CoopState.bosses[i].updated &&
 					coopController.CoopState.bosses[i].status)
 				{
-					// Read the boss time attack using your API
 					uint timeAttackValue = sotnApi.GameApi.GetTimeAttack(
 						(SotnApi.Constants.Values.Game.Enums.Times) (i + 1)
 					);
 
-					// Build packet: [MessageType][bossIndex][4-byte timeAttackValue]
 					byte[] packet = new byte[6];
 					packet[0] = (byte) MessageType.BossDefeat;
 					packet[1] = (byte) i;
 					Array.Copy(BitConverter.GetBytes(timeAttackValue), 0, packet, 2, 4);
 
-					// Send to teammate
 					coopController.SendData(packet);
 
-					// Clear updated flag so we don't resend
 					coopController.CoopState.bosses[i].updated = false;
 				}
 			}
