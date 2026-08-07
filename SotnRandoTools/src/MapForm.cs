@@ -87,7 +87,6 @@ namespace SotnRandoTools
 			RandoTracker.Tracker? tracker)
 		{
 			InitializeComponent();
-			this.TopMost = true;
 
 			_toolConfig = toolConfig;
 			_sotnApi = sotnApi;
@@ -107,10 +106,10 @@ namespace SotnRandoTools
 			_lblLocationInfo = new Label
 			{
 				Dock = DockStyle.Left,
-				Width = 240,
+				Width = 200,
 				ForeColor = Color.White,
 				BackColor = Color.Transparent,
-				Text = "Location: ---",
+				Text = "",
 				TextAlign = ContentAlignment.MiddleLeft,
 				Padding = new Padding(6, 3, 0, 0)
 			};
@@ -119,7 +118,7 @@ namespace SotnRandoTools
 			_lblCheckCounter = new Label
 			{
 				Dock = DockStyle.Right,
-				Width = 140,
+				Width = 100,
 				ForeColor = Color.White,
 				BackColor = Color.Transparent,
 				TextAlign = ContentAlignment.MiddleRight,
@@ -145,15 +144,37 @@ namespace SotnRandoTools
 				_viewOtherCastle = !_viewOtherCastle;
 				DrawCastleProgress();
 			};
+			var chkAlwaysOnTop = new CheckBox
+			{
+				Text = "Always On Top",
+				ForeColor = Color.White,
+				BackColor = Color.Black,
+				AutoSize = true,
+				Padding = new Padding(6, 2, 6, 2),
+				Checked = this.TopMost
+			};
+
+			chkAlwaysOnTop.CheckedChanged += (s, e) =>
+			{
+				this.TopMost = chkAlwaysOnTop.Checked;
+				chkAlwaysOnTop.ForeColor = chkAlwaysOnTop.Checked ? Color.Lime : Color.White;
+			};
 
 			infoPanel.Controls.Add(btnViewOtherCastle);
+			infoPanel.Controls.Add(chkAlwaysOnTop);
 
-			// Center the button dynamically
 			infoPanel.Resize += (s, e) =>
 			{
+				// Position View Other Castle button just to the right of the location label
 				btnViewOtherCastle.Location = new Point(
-					(infoPanel.Width / 2) - (btnViewOtherCastle.Width / 2),
+					_lblLocationInfo.Width + 10,
 					(infoPanel.Height - btnViewOtherCastle.Height) / 2
+				);
+
+				// Position Always On Top checkbox to the right of the button
+				chkAlwaysOnTop.Location = new Point(
+					btnViewOtherCastle.Location.X + btnViewOtherCastle.Width + 10,
+					(infoPanel.Height - chkAlwaysOnTop.Height) / 2
 				);
 			};
 
@@ -401,7 +422,8 @@ namespace SotnRandoTools
 
 				g.DrawImage(castleImg, new Rectangle(0, 0, 320 * _mapSize, 255 * _mapSize));
 
-				if (_lastTileX >= 0 && _lastTileY >= 0)
+				// Only draw local player if they are actually in the active castle
+				if (_lastTileX >= 0 && _lastTileY >= 0 && _curCastle == activeCastle)
 				{
 					int curX = _lastTileX * size;
 					int curY = _lastTileY * size - (size * 3);
@@ -696,6 +718,11 @@ namespace SotnRandoTools
 				_lblLocationInfo.Text = "Location: Out of bounds";
 				return;
 			}
+			if (_viewOtherCastle)
+			{
+				_lblLocationInfo.Text = "Viewing Other Castle";
+				return;
+			}
 			int posX = castleX * 5;
 			int posY = castleY * 5 - 15;
 			string castle = _curCastle == 1 ? "1" : "2";
@@ -709,7 +736,7 @@ namespace SotnRandoTools
 			else if (_curCastle == 2 && _locationNames2.TryGetValue((castleX, lookupY), out var name2))
 				locationName = name2;
 
-			_lblLocationInfo.Text = $"({posX}, {posY}, {castle}) {locationName}";
+			_lblLocationInfo.Text = $"{locationName}";
 		}
 
 		private void UpdateCheckCounter()
